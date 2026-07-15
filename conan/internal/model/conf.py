@@ -555,8 +555,16 @@ class ConfDefinition:
         Get the value of the conf name requested and convert it to the [type]-like passed.
         """
         pattern, name = self._split_pattern_name(conf_name)
-        return self._pattern_confs.get(pattern, Conf()).get(name, default=default,
-                                                            check_type=check_type, choices=choices)
+        conf = self._pattern_confs.get(pattern, Conf())
+        try:
+            return conf.get(name, default=default, check_type=check_type, choices=choices)
+        except ConanException:
+            # Backward compatible shorthand for pattern-qualified user confs, e.g.
+            # "pkg/*:version:value" resolving a stored "pkg/*:user.version:value".
+            matches = [conf_key for conf_key in conf._values if conf_key.endswith(f".{name}")]
+            if len(matches) == 1:
+                return conf.get(matches[0], default=default, check_type=check_type, choices=choices)
+            raise
 
     def show(self, fnpattern):
         """
