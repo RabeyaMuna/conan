@@ -96,20 +96,6 @@ jobs:
         pip install -r conans/requirements_server.txt
         pip install meson
 
-    - name: Disable unavailable functional test tools
-      if: matrix.test-type == 'functional'
-      run: |
-        cat > test/conftest_user.py <<'PY'
-        tools_locations = {
-            "cmake": {"disabled": True},
-            "premake": {"disabled": True},
-            "emcc": {"disabled": True},
-            "bazel": {"disabled": True},
-            "qbs": {"disabled": True},
-            "scons": {"disabled": True},
-        }
-        PY
-
     - name: Run tests
       uses: ./.github/actions/test-coverage
       with:
