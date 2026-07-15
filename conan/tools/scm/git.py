@@ -113,6 +113,19 @@ class Git:
             raise ConanException("Unable to check remote commit in '%s': %s" % (self.folder, str(e)))
 
         try:
+            refs = self.run(f"ls-remote {remote}")
+            if commit in refs:
+                return True
+        except (Exception,):
+            pass
+
+        try:
+            self.run(f"cat-file -e {commit}^{{commit}}")
+            return False
+        except (Exception,):
+            pass
+
+        try:
             # This will raise if commit not present.
             self.run(f"fetch {remote} --dry-run {commit}")
             return True

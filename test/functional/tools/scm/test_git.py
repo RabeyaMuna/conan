@@ -920,6 +920,7 @@ class TestGitMonorepoSCMFlow:
 
         c.save({"sub2/src/myfile.h": "my2header!"})
         git_add_changes_commit(folder=c.current_folder)
+        c.run_command("git push")
         c.run("create sub2")
         assert "pkg2/0.1: MYCMAKE-BUILD: mycmake2!" in c.out
         assert "pkg2/0.1: MYFILE-BUILD: my2header!" in c.out
