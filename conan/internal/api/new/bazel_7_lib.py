@@ -114,8 +114,6 @@ _bazel_rc = """\
 {% if output_root_dir is defined %}startup --output_user_root={{output_root_dir}}{% endif %}
 """
 _test_bazel_module_bazel = """\
-module(name = "{{name}}")
-
 bazel_dep(name = "rules_cc", version = "0.0.9")
 
 load_conan_dependencies = use_extension("//conan:conan_deps_module_extension.bzl", "conan_extension")

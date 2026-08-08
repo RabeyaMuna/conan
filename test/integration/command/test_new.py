@@ -72,6 +72,14 @@ class TestNewCommand:
         if template == "bazel_lib":
             assert "@rules_cc" not in client.load("test_package/main/BUILD")
 
+    def test_new_bazel_7_lib_uses_distinct_test_module(self):
+        client = TestClient(light=True)
+        client.run("new bazel_7_lib -d name=mylib -d version=0.1")
+
+        module = client.load("test_package/MODULE.bazel")
+        assert 'module(name = "mylib")' not in module
+        assert 'use_repo(load_conan_dependencies, "mylib")' in module
+
 
 class TestNewCommandUserTemplate:
 
