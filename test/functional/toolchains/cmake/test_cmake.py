@@ -1,5 +1,8 @@
 import os
 import platform
+import shutil
+import subprocess
+import tempfile
 import textwrap
 import time
 import unittest
@@ -12,6 +15,31 @@ from conan.test.assets.sources import gen_function_cpp, gen_function_h
 from test.functional.utils import check_vs_runtime, check_exe_run
 from conan.test.utils.tools import TestClient
 from conan.internal.util.files import save
+
+
+def _can_build_32_bit():
+    compiler = (os.environ.get("CXX") or os.environ.get("CC") or
+                shutil.which("g++") or shutil.which("c++") or shutil.which("gcc"))
+    if not compiler:
+        return False
+
+    with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as handle:
+        handle.write("int main() { return 0; }\n")
+        src_path = handle.name
+
+    obj_path = src_path + ".o"
+    try:
+        proc = subprocess.run([compiler, "-x", "c++", "-m32", "-c", src_path, "-o", obj_path],
+                              capture_output=True, text=True)
+        return proc.returncode == 0
+    except OSError:
+        return False
+    finally:
+        for path in (src_path, obj_path):
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
 
 
 @pytest.mark.tool("cmake", "3.15")
@@ -348,6 +376,9 @@ class LinuxTest(Base):
     @parameterized.expand([("Debug",  "14", "x86", "libstdc++", True),
                            ("Release", "gnu14", "x86_64", "libstdc++11", False)])
     def test_toolchain_linux(self, build_type, cppstd, arch, libcxx, shared):
+        if arch == "x86" and not _can_build_32_bit():
+            pytest.skip("32-bit compiler support is not available in this environment")
+
         settings = {"compiler": "gcc",
                     "compiler.cppstd": cppstd,
                     "compiler.libcxx": libcxx,

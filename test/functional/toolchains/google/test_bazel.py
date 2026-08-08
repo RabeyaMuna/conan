@@ -157,11 +157,6 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
             deps = [ "@myfirstlib//:myfirstlib" ]
         )
 
-        cc_shared_library(
-            name = "mysecondlib_shared",
-            shared_lib_name = "libmysecondlib_shared.{}",
-            deps = [":mysecondlib"],
-        )
         """.format("dylib" if os_ == "Darwin" else "dll"))
         mysecondlib_cpp = textwrap.dedent("""
         #include <iostream>
@@ -285,13 +280,7 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
             hdrs = ["mysecondlib.h"],
             deps = [ "@myfirstlib//:myfirstlib" ]
         )
-
-        cc_shared_library(
-            name = "mysecondlib_shared",
-            shared_lib_name = "libmysecondlib_shared.{}",
-            deps = [":mysecondlib"],
-        )
-        """.format("dylib" if os_ == "Darwin" else "dll"))
+        """)
         mysecondlib_cpp = textwrap.dedent("""
         #include <iostream>
         #include "mysecondlib.h"
