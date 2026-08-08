@@ -296,10 +296,7 @@ def _get_individual_tool(name, version):
     exe_found = which(exe)  # TODO: This which doesn't detect version either
     exe_path = str(pathlib.Path(exe_found).parent) if exe_found else None
     if not exe_found:
-        cached = True
-        if tool_path is None:
-            # will fail the test, not exe found and path None
-            cached = True
+        cached = False
     elif tool_path is not None and tool_path not in exe_found:
         # finds the exe in a path that is not the one set in the conf -> fail
         cached = True
