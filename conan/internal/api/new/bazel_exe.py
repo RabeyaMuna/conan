@@ -53,7 +53,8 @@ class {{package_name}}Test(ConanFile):
             self.run("{{name}}", env="conanrun")
 """
 
-_bazel_build_exe = """\
+_bazel_build_exe = """load("@rules_cc//cc:defs.bzl", "cc_binary")
+
 cc_binary(
     name = "{{name}}",
     srcs = ["main.cpp", "{{name}}.cpp", "{{name}}.h"]

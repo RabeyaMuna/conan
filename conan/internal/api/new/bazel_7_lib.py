@@ -83,6 +83,8 @@ class {{package_name}}TestConan(ConanFile):
 
 
 _bazel_build_test = """\
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
 cc_binary(
     name = "example",
     srcs = ["example.cpp"],
@@ -92,7 +94,9 @@ cc_binary(
 )
 """
 
-_bazel_build = """\
+_bazel_build = """\\
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 cc_library(
     name = "{{name}}",
     srcs = ["{{name}}.cpp"],
