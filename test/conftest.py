@@ -153,16 +153,19 @@ tools_locations = {
         "system": {"path": {'Windows': "C:/tools/cygwin/bin"}},
     },
     'bazel': {
-        "default": "7",
+        "default": "7.4.1",
         "6.5.0": {"path": {'Linux': '/usr/share/bazel-6.5.0/bin',
                            'Windows': 'C:/tools/bazel/6.5.0',
-                           'Darwin': '/Users/runner/Applications/bazel/6.5.0'}},
+                           'Darwin': '/Users/runner/Applications/bazel/6.5.0'},
+                  "env": {"USE_BAZEL_VERSION": "6.5.0"}},
         "7.4.1": {"path": {'Linux': '/usr/share/bazel-7.4.1/bin',
                            'Windows': 'C:/tools/bazel/7.4.1',
-                           'Darwin': '/Users/runner/Applications/bazel/7.4.1'}},
+                           'Darwin': '/Users/runner/Applications/bazel/7.4.1'},
+                  "env": {"USE_BAZEL_VERSION": "7.4.1"}},
         "8.0.0": {"path": {'Linux': '/usr/share/bazel-8.0.0/bin',
                            'Windows': 'C:/tools/bazel/8.0.0',
-                           'Darwin': '/Users/runner/Applications/bazel/8.0.0'}},
+                           'Darwin': '/Users/runner/Applications/bazel/8.0.0'},
+                  "env": {"USE_BAZEL_VERSION": "8.0.0"}},
     },
     'premake': {
         "exe": "premake5",
@@ -281,9 +284,11 @@ def _get_individual_tool(name, version):
         tool_path = None
 
     try:
-        tool_env = tools_environments[name][tool_platform]
+        tool_env = dict(tools_environments[name][tool_platform])
     except KeyError:
-        tool_env = None
+        tool_env = {}
+    tool_env.update(tool_version.get("env", {}) if tool_version else {})
+    tool_env = tool_env or None
 
     cached = tool_path, tool_env
 
