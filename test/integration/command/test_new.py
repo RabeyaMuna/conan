@@ -61,6 +61,17 @@ class TestNewCommand:
             assert 'name = "mylib"' in conanfile
             assert 'version = "0.1"' in conanfile
 
+    @pytest.mark.parametrize("template", ("bazel_exe", "bazel_lib"))
+    def test_new_bazel_6_uses_native_cc_rules(self, template):
+        client = TestClient(light=True)
+        client.run(f"new {template} -d name=mypkg -d version=0.1")
+
+        assert "@rules_cc" not in client.load("main/BUILD")
+        assert not os.path.exists(os.path.join(client.current_folder, "MODULE.bazel"))
+
+        if template == "bazel_lib":
+            assert "@rules_cc" not in client.load("test_package/main/BUILD")
+
 
 class TestNewCommandUserTemplate:
 
