@@ -24,7 +24,7 @@ def _can_build_32_bit():
         return False
 
     with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as handle:
-        handle.write("int main() { return 0; }\n")
+        handle.write("#include <iostream>\nint main() { std::cout << \"ok\"; return 0; }\n")
         src_path = handle.name
 
     obj_path = src_path + ".o"

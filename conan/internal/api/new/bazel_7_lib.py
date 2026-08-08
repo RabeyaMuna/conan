@@ -105,10 +105,19 @@ cc_library(
 """
 
 _bazel_workspace = " "  # Important not empty, so template doesn't discard it
+_bazel_module = """\
+module(name = "{{name}}")
+
+bazel_dep(name = "rules_cc", version = "0.0.9")
+"""
 _bazel_rc = """\
 {% if output_root_dir is defined %}startup --output_user_root={{output_root_dir}}{% endif %}
 """
 _test_bazel_module_bazel = """\
+module(name = "{{name}}")
+
+bazel_dep(name = "rules_cc", version = "0.0.9")
+
 load_conan_dependencies = use_extension("//conan:conan_deps_module_extension.bzl", "conan_extension")
 use_repo(load_conan_dependencies, "{{name}}")
 """
@@ -122,7 +131,7 @@ bazel_lib_files_7 = {"conanfile.py": conanfile_sources_v2,
                      "main/{{name}}.cpp": source_cpp,
                      "main/{{name}}.h": source_h,
                      "main/BUILD": _get_bazel_build(),
-                     "MODULE.bazel": _bazel_workspace,
+                     "MODULE.bazel": _bazel_module,
                      ".bazelrc": _bazel_rc,
                      "test_package/conanfile.py": test_conanfile_v2,
                      "test_package/main/example.cpp": test_main,
