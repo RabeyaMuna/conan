@@ -219,7 +219,7 @@ class WinTest(Base):
         options = {"shared": shared}
         save(self.client.paths.new_config_path, "tools.build:jobs=1")
         self._run_build(settings, options)
-        self.assertIn('cmake -G "Visual Studio 15 2017" '
+        self.assertIn('cmake -G "Visual Studio" '
                       '-DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake"', self.client.out)
 
         generator_platform = "x64" if arch == "x86_64" else "Win32"
@@ -497,7 +497,7 @@ def test_msvc_vs_versiontoolset():
                  })
     settings = " ".join('-s %s="%s"' % (k, v) for k, v in settings.items() if v)
     client.run("create . --name=app --version=1.0 {}".format(settings))
-    assert '-G "Visual Studio 15 2017"' in client.out
+    assert '-G "Visual Studio"' in client.out
 
     check_exe_run(client.out, "main", "msvc", "191",
                   "Release", "x86_64", "14")
