@@ -1,3 +1,4 @@
+import re
 import platform
 import unittest
 
@@ -33,4 +34,7 @@ class TestMesonBase(unittest.TestCase):
             self.assertIn("main _MSVC_LANG2014", self.t.out)
         elif platform.system() == "Linux":
             self.assertIn(f"main {arch_macro['gcc'][host_arch]} defined", self.t.out)
-            self.assertIn("main __GNUC__9", self.t.out)
+            # Check for GCC version >= 9 (match __GNUC__9, __GNUC__10, etc.)
+            match = re.search(r'main __GNUC__(\d+)', self.t.out)
+            self.assertIsNotNone(match, "Expected __GNUC__<version> in output")
+            self.assertGreaterEqual(int(match.group(1)), 9, "GCC version should be >= 9")
