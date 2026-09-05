@@ -103,16 +103,30 @@ class MesonInstall(TestMesonBase):
     def test_install(self):
         hello_cpp = gen_function_cpp(name="hello")
         hello_h = gen_function_h(name="hello")
-        test_package_cpp = gen_function_cpp(name="main", includes=["hello"], calls=["hello"])
+        test_package_cpp = gen_function_cpp(
+            name="main", includes=["hello"], calls=["hello"]
+        )
 
-        self.t.save({"conanfile.py": self._conanfile_py,
-                     "meson.build": self._meson_build,
-                     "hello.cpp": hello_cpp,
-                     "hello.h": hello_h,
-                     os.path.join("test_package", "conanfile.py"): self._test_package_conanfile_py,
-                     os.path.join("test_package", "CMakeLists.txt"): self._test_package_cmake_lists,
-                     os.path.join("test_package", "src", "test_package.cpp"): test_package_cpp})
+        self.t.save(
+            {
+                "conanfile.py": self._conanfile_py,
+                "meson.build": self._meson_build,
+                "hello.cpp": hello_cpp,
+                "hello.h": hello_h,
+                os.path.join(
+                    "test_package", "conanfile.py"
+                ): self._test_package_conanfile_py,
+                os.path.join(
+                    "test_package", "CMakeLists.txt"
+                ): self._test_package_cmake_lists,
+                os.path.join(
+                    "test_package", "src", "test_package.cpp"
+                ): test_package_cpp,
+            }
+        )
 
-        self.t.run("create . --name=hello --version=0.1 -c tools.compilation:verbosity=verbose")
+        self.t.run(
+            "create . --name=hello --version=0.1 -c tools.compilation:verbosity=verbose"
+        )
         assert "--verbose" in self.t.out
         self._check_binary()

@@ -164,19 +164,29 @@ _test_package_cmake_lists = textwrap.dedent("""
 @pytest.mark.tool("meson")
 def test_subproject():
     client = TestClient()
-    test_package_c = gen_function_c(name="main", includes=["greeter"], calls=["greeter"])
-    client.save({"conanfile.py": _conanfile_py,
-                 "meson.build": _meson_build,
-                 "greeter.c": _greeter_c,
-                 "greeter.h": _greeter_h,
-                 os.path.join("include", "greeter.h"): _greeter_h,
-                 os.path.join("subprojects", "hello", "include", "hello.h"): _hello_h,
-                 os.path.join("subprojects", "hello", "hello.c"): _hello_c,
-                 os.path.join("subprojects", "hello", "meson.build"): _meson_subproject_build,
-                 os.path.join("subprojects", "hello", "meson_options.txt"): _meson_subproject_options,
-                 os.path.join("test_package", "conanfile.py"): _test_package_conanfile_py,
-                 os.path.join("test_package", "CMakeLists.txt"): _test_package_cmake_lists,
-                 os.path.join("test_package", "src", "test_package.c"): test_package_c})
+    test_package_c = gen_function_c(
+        name="main", includes=["greeter"], calls=["greeter"]
+    )
+    client.save(
+        {
+            "conanfile.py": _conanfile_py,
+            "meson.build": _meson_build,
+            "greeter.c": _greeter_c,
+            "greeter.h": _greeter_h,
+            os.path.join("include", "greeter.h"): _greeter_h,
+            os.path.join("subprojects", "hello", "include", "hello.h"): _hello_h,
+            os.path.join("subprojects", "hello", "hello.c"): _hello_c,
+            os.path.join(
+                "subprojects", "hello", "meson.build"
+            ): _meson_subproject_build,
+            os.path.join(
+                "subprojects", "hello", "meson_options.txt"
+            ): _meson_subproject_options,
+            os.path.join("test_package", "conanfile.py"): _test_package_conanfile_py,
+            os.path.join("test_package", "CMakeLists.txt"): _test_package_cmake_lists,
+            os.path.join("test_package", "src", "test_package.c"): test_package_c,
+        }
+    )
     client.run("create . --name=greeter --version=0.1")
     assert "Hello from subproject" in client.out
     assert "Le sous-projet vous salut" not in client.out

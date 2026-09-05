@@ -4,18 +4,18 @@ import textwrap
 
 import pytest
 
-from conan.tools.apple.apple import _to_apple_arch, XCRun
+from conan.internal.util.runners import conan_run
 from conan.test.assets.sources import gen_function_cpp, gen_function_h
 from conan.test.utils.mocks import ConanFileMock
 from conan.test.utils.tools import TestClient
-from conan.internal.util.runners import conan_run
+from conan.tools.apple.apple import XCRun, _to_apple_arch
 
 
 @pytest.mark.tool("meson")
 @pytest.mark.skipif(platform.system() != "Darwin", reason="requires OSX")
 def test_apple_meson_toolchain_cross_compiling():
-    arch_host = 'armv8' if platform.machine() == "x86_64" else "x86_64"
-    arch_build = 'armv8' if platform.machine() != "x86_64" else "x86_64"
+    arch_host = "armv8" if platform.machine() == "x86_64" else "x86_64"
+    arch_build = "armv8" if platform.machine() != "x86_64" else "x86_64"
     profile = textwrap.dedent(f"""
     [settings]
     os = Macos
@@ -76,13 +76,17 @@ def test_apple_meson_toolchain_cross_compiling():
     hello_h = gen_function_h(name="hello")
     hello_cpp = gen_function_cpp(name="hello")
     client = TestClient()
-    client.save({"conanfile.py": conanfile_py,
-                 "meson.build": meson_build,
-                 "hello.h": hello_h,
-                 "hello.cpp": hello_cpp,
-                 "mygen.cpp": my_gen_cpp,
-                 "profile_host": profile,
-                 "profile_build": profile_build})
+    client.save(
+        {
+            "conanfile.py": conanfile_py,
+            "meson.build": meson_build,
+            "hello.h": hello_h,
+            "hello.cpp": hello_cpp,
+            "mygen.cpp": my_gen_cpp,
+            "profile_host": profile,
+            "profile_build": profile_build,
+        }
+    )
     client.run("build . --profile:build=profile_build --profile:host=profile_host")
     libhello = os.path.join(client.current_folder, "build", "libhello.a")
     assert os.path.isfile(libhello) is True
@@ -93,6 +97,6 @@ def test_apple_meson_toolchain_cross_compiling():
     # Extra check for lib arch
     conanfile = ConanFileMock({}, runner=conan_run)
     xcrun = XCRun(conanfile)
-    lipo = xcrun.find('lipo')
+    lipo = xcrun.find("lipo")
     client.run_command('"%s" -info "%s"' % (lipo, libhello))
     assert "architecture: %s" % _to_apple_arch(arch_host) in client.out

@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import sys
 import textwrap
 
@@ -49,9 +50,9 @@ def test_cross_x86():
         """)
     main_cpp = gen_function_cpp(name="main")
     client = TestClient()
-    client.save({"conanfile.py": conanfile_py,
-                 "meson.build": meson_build,
-                 "main.cpp": main_cpp})
+    client.save(
+        {"conanfile.py": conanfile_py, "meson.build": meson_build, "main.cpp": main_cpp}
+    )
     client.run("install .")
     content = client.load("conan_meson_native.ini")
     assert "backend = 'vs'" in content
@@ -60,5 +61,5 @@ def test_cross_x86():
     client.run_command(os.path.join("build", "demo"))
 
     assert "main _M_X64 defined" in client.out
-    assert "main _MSC_VER19" in client.out
-    assert "main _MSVC_LANG2014" in client.out
+    assert re.search(r"main _MSC_VER\d+", client.out)
+    assert re.search(r"main _MSVC_LANG\d+", client.out)

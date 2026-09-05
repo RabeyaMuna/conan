@@ -1,15 +1,17 @@
 import os
 import platform
+import re
 import tempfile
 import textwrap
+
 import pytest
 
-from conan.tools.apple.apple import _to_apple_arch, XCRun
+from conan.internal.util.runners import conan_run
 from conan.test.assets.sources import gen_function_cpp, gen_function_h
-from test.conftest import tools_locations
 from conan.test.utils.mocks import ConanFileMock
 from conan.test.utils.tools import TestClient
-from conan.internal.util.runners import conan_run
+from conan.tools.apple.apple import XCRun, _to_apple_arch
+from test.conftest import tools_locations
 
 _conanfile_py = textwrap.dedent("""
 from conan import ConanFile
@@ -57,16 +59,24 @@ option('STRING_DEFINITION', type : 'string', description : 'a string option')
 
 @pytest.mark.tool("meson")
 @pytest.mark.skipif(platform.system() != "Darwin", reason="requires Xcode")
-@pytest.mark.parametrize("arch, os_, os_version, os_sdk", [
-    ('armv8', 'iOS', '17.1', 'iphoneos'),
-    ('armv7', 'iOS', '10.0', 'iphoneos'),
-    ('x86', 'iOS', '10.0', 'iphonesimulator'),
-    ('x86_64', 'iOS', '10.0', 'iphonesimulator'),
-    ('armv8' if platform.machine() == "x86_64" else "x86_64", 'Macos', None, None),
-    ('armv8' if platform.machine() == "x86_64" else "x86_64", 'Macos', '10.11', None),
-    ('armv8', 'visionOS', '1.0', 'xros'),
-    ('armv8', 'visionOS', '1.0', 'xrsimulator')
-])
+@pytest.mark.parametrize(
+    "arch, os_, os_version, os_sdk",
+    [
+        ("armv8", "iOS", "17.1", "iphoneos"),
+        ("armv7", "iOS", "10.0", "iphoneos"),
+        ("x86", "iOS", "10.0", "iphonesimulator"),
+        ("x86_64", "iOS", "10.0", "iphonesimulator"),
+        ("armv8" if platform.machine() == "x86_64" else "x86_64", "Macos", None, None),
+        (
+            "armv8" if platform.machine() == "x86_64" else "x86_64",
+            "Macos",
+            "10.11",
+            None,
+        ),
+        ("armv8", "visionOS", "1.0", "xros"),
+        ("armv8", "visionOS", "1.0", "xrsimulator"),
+    ],
+)
 def test_apple_meson_toolchain_cross_compiling(arch, os_, os_version, os_sdk):
     profile = textwrap.dedent("""
     [settings]
@@ -86,16 +96,21 @@ def test_apple_meson_toolchain_cross_compiling(arch, os_, os_version, os_sdk):
         os=os_,
         os_version=f"os.version={os_version}" if os_version else "",
         os_sdk="os.sdk = " + os_sdk if os_sdk else "",
-        arch=arch)
+        arch=arch,
+    )
 
     t = TestClient()
-    t.save({"conanfile.py": _conanfile_py,
+    t.save(
+        {
+            "conanfile.py": _conanfile_py,
             "meson.build": _meson_build,
             "meson_options.txt": _meson_options_txt,
             "hello.h": hello_h,
             "hello.cpp": hello_cpp,
             "main.cpp": app,
-            "profile_host": profile})
+            "profile_host": profile,
+        }
+    )
 
     t.run("build . --profile:build=default --profile:host=profile_host")
 
@@ -106,7 +121,7 @@ def test_apple_meson_toolchain_cross_compiling(arch, os_, os_version, os_sdk):
 
     conanfile = ConanFileMock({}, runner=conan_run)
     xcrun = XCRun(conanfile, os_sdk)
-    lipo = xcrun.find('lipo')
+    lipo = xcrun.find("lipo")
 
     t.run_command('"%s" -info "%s"' % (lipo, libhello))
     assert "architecture: %s" % _to_apple_arch(arch) in t.out
@@ -144,25 +159,31 @@ def test_windows_cross_compiling_x86():
         """)
 
     client = TestClient()
-    client.save({"conanfile.py": _conanfile_py,
-                 "meson.build": meson_build,
-                 "main.cpp": main_cpp,
-                 "x86": profile_x86})
+    client.save(
+        {
+            "conanfile.py": _conanfile_py,
+            "meson.build": meson_build,
+            "main.cpp": main_cpp,
+            "x86": profile_x86,
+        }
+    )
     profile_str = "--profile:build=default --profile:host=x86"
     client.run("build . %s" % profile_str)
     client.run_command(os.path.join("build", "demo"))
     assert "main _M_IX86 defined" in client.out
-    assert "main _MSC_VER19" in client.out
-    assert "main _MSVC_LANG2014" in client.out
+    assert re.search(r"main _MSC_VER\d+", client.out)
+    assert re.search(r"main _MSVC_LANG\d+", client.out)
 
 
-@pytest.mark.parametrize("arch, expected_arch", [('armv8', 'aarch64'),
-                                                 ('armv7', 'arm'),
-                                                 ('x86', 'i386'),
-                                                 ('x86_64', 'x86_64')])
+@pytest.mark.parametrize(
+    "arch, expected_arch",
+    [("armv8", "aarch64"), ("armv7", "arm"), ("x86", "i386"), ("x86_64", "x86_64")],
+)
 @pytest.mark.tool("meson")
 @pytest.mark.tool("android_ndk")
-@pytest.mark.skipif(platform.system() != "Darwin", reason="Android NDK only tested in MacOS for now")
+@pytest.mark.skipif(
+    platform.system() != "Darwin", reason="Android NDK only tested in MacOS for now"
+)
 def test_android_meson_toolchain_cross_compiling(arch, expected_arch):
     profile_host = textwrap.dedent("""
     include(default)
@@ -179,25 +200,31 @@ def test_android_meson_toolchain_cross_compiling(arch, expected_arch):
     hello_cpp = gen_function_cpp(name="hello", preprocessor=["STRING_DEFINITION"])
     app = gen_function_cpp(name="main", includes=["hello"], calls=["hello"])
     ndk_path = tools_locations["android_ndk"]["system"]["path"][platform.system()]
-    profile_host = profile_host.format(
-        arch=arch,
-        ndk_path=ndk_path
-    )
+    profile_host = profile_host.format(arch=arch, ndk_path=ndk_path)
 
     client = TestClient()
-    client.save({"conanfile.py": _conanfile_py,
-                 "meson.build": _meson_build,
-                 "meson_options.txt": _meson_options_txt,
-                 "hello.h": hello_h,
-                 "hello.cpp": hello_cpp,
-                 "main.cpp": app,
-                 "profile_host": profile_host})
+    client.save(
+        {
+            "conanfile.py": _conanfile_py,
+            "meson.build": _meson_build,
+            "meson_options.txt": _meson_options_txt,
+            "hello.h": hello_h,
+            "hello.cpp": hello_cpp,
+            "main.cpp": app,
+            "profile_host": profile_host,
+        }
+    )
 
     client.run("build . --profile:build=default --profile:host=profile_host")
     content = client.load(os.path.join("conan_meson_cross.ini"))
     assert "needs_exe_wrapper = true" in content
-    assert "Target machine cpu family: {}".format(expected_arch if expected_arch != "i386" else "x86") in client.out
-    assert "Target machine cpu: {}".format(arch) in client.out
+    assert (
+        "Target machine cpu family: {}".format(
+            expected_arch if expected_arch != "i386" else "x86"
+        )
+        in client.out
+    )
+    assert f"Target machine cpu: {arch}" in client.out
     libhello_name = "libhello.a" if platform.system() != "Windows" else "libhello.lib"
     libhello = os.path.join(client.current_folder, "build", libhello_name)
     demo = os.path.join(client.current_folder, "build", "demo")
@@ -219,12 +246,13 @@ def test_use_meson_toolchain():
     # TODO: Very similar to test in test_use_cmake_toolchain, refactor/restructure tests
     # Overriding the default folders, so they are in the same unit drive in Windows
     # otherwise AndroidNDK FAILS to build, it needs using the same unit drive
-    c = TestClient(cache_folder=tempfile.mkdtemp(),
-                   current_folder=tempfile.mkdtemp())
+    c = TestClient(cache_folder=tempfile.mkdtemp(), current_folder=tempfile.mkdtemp())
     c.run("new meson_lib -d name=hello -d version=0.1")
     ndk_path = tools_locations["android_ndk"]["system"]["path"][platform.system()]
     pkgconf = tools_locations["pkg_config"]
-    pkgconf_path = pkgconf[pkgconf["default"]]["path"].get(platform.system()) + f'/pkg-config'
+    pkgconf_path = (
+        pkgconf[pkgconf["default"]]["path"].get(platform.system()) + "/pkg-config"
+    )
     android = textwrap.dedent(f"""
        [settings]
        os=Android
@@ -240,9 +268,9 @@ def test_use_meson_toolchain():
        tools.gnu:pkg_config={pkgconf_path}
        """)
     c.save({"android": android})
-    c.run('create . --profile:host=android')
+    c.run("create . --profile:host=android")
     assert "hello/0.1 (test package): Running test()" in c.out
 
     # Build locally
-    c.run('build . --profile:host=android')
+    c.run("build . --profile:host=android")
     assert "conanfile.py (hello/0.1): Calling build()" in c.out

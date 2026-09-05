@@ -1,7 +1,7 @@
 import os
+import textwrap
 
 import pytest
-import textwrap
 
 from conan.test.assets.sources import gen_function_cpp
 from test.functional.toolchains.meson._base import TestMesonBase
@@ -40,14 +40,18 @@ class MesonPkgConfigTest(TestMesonBase):
 
     def test_reuse(self):
         self.t.run("new cmake_lib -d name=hello -d version=0.1")
-        self.t.run("create . -tf=\"\"")
+        self.t.run('create . -tf=""')
 
         app = gen_function_cpp(name="main", includes=["hello"], calls=["hello"])
         # Prepare the actual consumer package
-        self.t.save({"conanfile.py": self._conanfile_py,
-                     "meson.build": self._meson_build,
-                     "main.cpp": app},
-                    clean_first=True)
+        self.t.save(
+            {
+                "conanfile.py": self._conanfile_py,
+                "meson.build": self._meson_build,
+                "main.cpp": app,
+            },
+            clean_first=True,
+        )
 
         # Build in the cache
         self.t.run("build .")

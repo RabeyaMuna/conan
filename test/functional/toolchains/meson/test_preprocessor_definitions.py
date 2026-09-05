@@ -43,15 +43,20 @@ class MesonPreprocessorDefinitionsTest(TestMesonBase):
 
     def test_build(self):
         hello_h = gen_function_h(name="hello")
-        hello_cpp = gen_function_cpp(name="hello",
-                                     preprocessor=["TEST_DEFINITION1", "TEST_DEFINITION2"])
+        hello_cpp = gen_function_cpp(
+            name="hello", preprocessor=["TEST_DEFINITION1", "TEST_DEFINITION2"]
+        )
         app = gen_function_cpp(name="main", includes=["hello"], calls=["hello"])
 
-        self.t.save({"conanfile.py": self._conanfile_py,
-                     "meson.build": self._meson_build,
-                     "hello.h": hello_h,
-                     "hello.cpp": hello_cpp,
-                     "main.cpp": app})
+        self.t.save(
+            {
+                "conanfile.py": self._conanfile_py,
+                "meson.build": self._meson_build,
+                "hello.h": hello_h,
+                "hello.cpp": hello_cpp,
+                "main.cpp": app,
+            }
+        )
 
         self.t.run("install .")
 
