@@ -686,7 +686,7 @@ def test_deactivate_location():
     client.run("create pkg.py --name pkg --version 1.0")
     client.run("install --requires pkg/1.0@ -g VirtualBuildEnv -of=myfolder -s build_type=Release -s arch=x86_64")
 
-    source_cmd, script_ext = ("myfolder\\", ".bat") if platform.system() == "Windows" else (". ./myfolder/", ".sh")
+    source_cmd, script_ext = (os.path.join("myfolder", ""), ".bat") if platform.system() == "Windows" else (". ./myfolder/", ".sh")
     cmd = "{}conanbuild{}".format(source_cmd, script_ext)
 
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True,
