@@ -216,7 +216,7 @@ try:
         return d
 
     update(tools_locations, user_tool_locations)
-except ImportError as e:
+except ImportError:
     user_tool_locations = None
 
 
@@ -331,11 +331,11 @@ def pytest_runtest_setup(item):
     tools_env_vars = dict()
     for mark in item.iter_markers():
         if mark.name.startswith("tool_"):
-            raise Exception("Invalid decorator @pytest.mark.{}".format(mark.name))
+            raise Exception(f"Invalid decorator @pytest.mark.{mark.name}")
 
     kwargs = [mark.kwargs for mark in item.iter_markers(name="tool")]
     if any(kwargs):
-        raise Exception("Invalid decorator @pytest.mark Do not use kwargs: {}".format(kwargs))
+        raise Exception(f"Invalid decorator @pytest.mark Do not use kwargs: {kwargs}")
     tools_params = [mark.args for mark in item.iter_markers(name="tool")]
     for tool_params in tools_params:
         if len(tool_params) == 1:
@@ -344,17 +344,12 @@ def pytest_runtest_setup(item):
         elif len(tool_params) == 2:
             tool_name, tool_version = tool_params
         else:
-            raise Exception("Invalid arguments for mark.tool: {}".format(tool_params))
+            raise Exception(f"Invalid arguments for mark.tool: {tool_params}")
 
         result = _get_tool(tool_name, tool_version)
-        if result is True:
-            version_msg = "Any" if tool_version is None else tool_version
-            pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
-                                                                                  version_msg))
         if result is False:
             version_msg = "Any" if tool_version is None else tool_version
-            pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
-                                                                                  version_msg))
+            pytest.skip(f"Skipped: Optional '{tool_name}' tool version '{version_msg}' is not available")
 
         tool_path, tool_env = result
         if tool_path:
