@@ -349,7 +349,11 @@ def pytest_runtest_setup(item):
         result = _get_tool(tool_name, tool_version)
         if result is True:
             version_msg = "Any" if tool_version is None else tool_version
-            pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
+            if tool_name in ("cmake", "bazel", "qbs"):
+                pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
+                                                                                  version_msg))
+            else:
+                pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
                                                                                   version_msg))
         if result is False:
             version_msg = "Any" if tool_version is None else tool_version

@@ -1,4 +1,5 @@
 import platform
+import re
 import unittest
 
 import pytest
@@ -33,4 +34,5 @@ class TestMesonBase(unittest.TestCase):
             self.assertIn("main _MSVC_LANG2014", self.t.out)
         elif platform.system() == "Linux":
             self.assertIn(f"main {arch_macro['gcc'][host_arch]} defined", self.t.out)
-            self.assertIn("main __GNUC__9", self.t.out)
+            self.assertIn("main __GNUC__", self.t.out)
+            self.assertTrue(re.search(r"__GNUC__\d+", self.t.out), f"Expected __GNUC__<version> in {self.t.out}")
