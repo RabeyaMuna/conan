@@ -218,7 +218,7 @@ try:
         return d
 
     update(tools_locations, user_tool_locations)
-except ImportError as e:
+except ImportError:
     user_tool_locations = None
 
 
@@ -351,7 +351,7 @@ def pytest_runtest_setup(item):
         result = _get_tool(tool_name, tool_version)
         if result is True:
             version_msg = "Any" if tool_version is None else tool_version
-            pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
+            pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
                                                                                   version_msg))
         if result is False:
             version_msg = "Any" if tool_version is None else tool_version
