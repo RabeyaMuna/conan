@@ -48,6 +48,11 @@ class TestProfileDetectAPI:
 
     @pytest.mark.skipif(platform.system() != "Linux", reason="Only linux")
     def test_profile_detect_libc(self):
+        # Check if GCC compiler is available, skip if not
+        compiler, _, _ = detect_api.detect_gcc_compiler()
+        if compiler is None:
+            pytest.skip("No GCC compiler detected")
+        
         client = TestClient()
         tpl1 = textwrap.dedent("""
             {% set compiler, version, _ = detect_api.detect_gcc_compiler() %}

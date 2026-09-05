@@ -6,12 +6,19 @@ import unittest
 import pytest
 
 from conan.internal.api.profile.detect import detect_defaults_settings
-from conan.test.utils.mocks import RedirectedTestOutput
-from conan.test.utils.tools import TestClient, redirect_output
-from conan.test.utils.env import environment_update
 from conan.internal.util.files import save
 from conan.internal.util.runners import detect_runner
+from conan.test.utils.env import environment_update
+from conan.test.utils.mocks import RedirectedTestOutput
+from conan.test.utils.tools import TestClient, redirect_output
 from conan.tools.microsoft.visual import vcvars_command
+
+
+def _is_compiler_available():
+    """Check if a compiler is available in the system"""
+    result = detect_defaults_settings()
+    result_dict = dict(result)
+    return result_dict.get("compiler") is not None
 
 
 class TestProfile(unittest.TestCase):
@@ -79,6 +86,7 @@ class TestProfile(unittest.TestCase):
 
 
 class DetectCompilersTest(unittest.TestCase):
+    @pytest.mark.skipif(not _is_compiler_available(), reason="Compiler not available")
     def test_detect_default_compilers(self):
         platform_default_compilers = {
             "Linux": "gcc",
@@ -107,9 +115,8 @@ class DetectCompilersTest(unittest.TestCase):
         # see: https://stackoverflow.com/questions/19535422/os-x-10-9-gcc-links-to-clang
 
         output = RedirectedTestOutput()  # Initialize each command
-        with redirect_output(output):
-            with environment_update({"CC": "gcc"}):
-                result = detect_defaults_settings()
+        with redirect_output(output), environment_update({"CC": "gcc"}):
+            result = detect_defaults_settings()
         # result is a list of tuples (name, value) so converting it to dict
         result = dict(result)
         # No compiler should be detected

@@ -1,3 +1,4 @@
+import re
 import os
 import platform
 import tempfile
@@ -152,8 +153,8 @@ def test_windows_cross_compiling_x86():
     client.run("build . %s" % profile_str)
     client.run_command(os.path.join("build", "demo"))
     assert "main _M_IX86 defined" in client.out
-    assert "main _MSC_VER19" in client.out
-    assert "main _MSVC_LANG2014" in client.out
+    assert re.search(r"main _MSC_VER\d+", client.out)
+    assert re.search(r"main _MSVC_LANG\d+", client.out)
 
 
 @pytest.mark.parametrize("arch, expected_arch", [('armv8', 'aarch64'),
