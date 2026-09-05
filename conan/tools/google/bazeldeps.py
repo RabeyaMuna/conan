@@ -10,6 +10,28 @@ from conan.internal.model.pkg_type import PackageType
 from conan.internal.util.files import save
 
 
+def _relativize_path(path, pattern):
+    """
+    Returns a relative path with regard to the given pattern.
+
+    :param path: absolute or relative path
+    :param pattern: pattern to match against
+    :return: Unix-like path relative if matches to the given pattern.
+             Otherwise, it returns the original path.
+    """
+    if not path or not pattern:
+        return path
+    path_ = path.replace("\\", "/").replace("/./", "/")
+    pattern_ = pattern.replace("\\", "/").replace("/./", "/")
+    match = re.match(pattern_, path_)
+    if match:
+        matching = match[0]
+        if path_.startswith(matching):
+            path_ = path_.replace(matching, "").strip("/")
+            return path_.strip("./") or "./"
+    return path
+
+
 class _BazelDepBuildGenerator:
     """
     This class creates the BUILD.bazel for each dependency where it's declared all the
