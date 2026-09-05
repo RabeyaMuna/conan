@@ -4,10 +4,10 @@ import textwrap
 
 import pytest
 
+from conan.internal.util.files import mkdir, save, save_files
 from conan.test.assets.genconanfile import GenConanfile
 from conan.test.utils.test_files import temp_folder
 from conan.test.utils.tools import TestClient
-from conan.internal.util.files import mkdir, save, save_files
 
 
 @pytest.fixture(scope="module")
@@ -469,14 +469,14 @@ class TestUserChannel:
     def test_user_channel_requirement_only_at(self, c3i_user_channel_folder):
         tc = TestClient(light=True)
         tc.run(f"remote add local '{c3i_user_channel_folder}'")
-        tc.run(f"graph info --requires=pkg/[*]@")
-        assert f"pkg/[*]: pkg/2.0" in tc.out
+        tc.run("graph info --requires=pkg/[*]@")
+        assert "pkg/[*]: pkg/2.0" in tc.out
 
-        tc.run(f"graph info --requires=pkg/[<2]@", assert_error=True)
-        assert f" Package 'pkg/[<2]' not resolved" in tc.out
+        tc.run("graph info --requires=pkg/[<2]@", assert_error=True)
+        assert " Package 'pkg/[<2]' not resolved" in tc.out
 
-        tc.run(f"graph info --requires=pkg/[<2]", assert_error=True)
-        assert f" Package 'pkg/[<2]' not resolved" in tc.out
+        tc.run("graph info --requires=pkg/[<2]", assert_error=True)
+        assert " Package 'pkg/[<2]' not resolved" in tc.out
 
 
 class TestResetRemote:
