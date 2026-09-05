@@ -120,6 +120,11 @@ class ConfigAPI:
         """
         return self._helpers.global_conf.show(pattern)
 
+    def global_conf_list(self):
+        """ list all the available built-in configurations (global.conf)
+        """
+        return BUILT_IN_CONFS
+
     @staticmethod
     def conf_list():
         """ list all the available built-in configurations
