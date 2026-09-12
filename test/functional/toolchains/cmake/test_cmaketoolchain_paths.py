@@ -9,7 +9,9 @@ ios10_armv8_settings = "-s os=iOS -s os.sdk=iphoneos -s os.version=10.0 -s arch=
 
 
 class _FindRootPathModes(object):
-    def __init__(self, package=None, library=None, framework=None, include=None, program=None):
+    def __init__(
+        self, package=None, library=None, framework=None, include=None, program=None
+    ):
         self.package = package
         self.library = library
         self.framework = framework
@@ -29,21 +31,39 @@ find_root_path_modes_cross_build = _FindRootPathModes(
 
 def _cmake_command_toolchain(find_root_path_modes):
     build_type = "-DCMAKE_BUILD_TYPE=Release" if platform.system() != "Windows" else ""
-    cmake_command = "cmake .. -DCMAKE_TOOLCHAIN_FILE=../conan_toolchain.cmake {}".format(build_type)
+    cmake_command = (
+        "cmake .. -DCMAKE_TOOLCHAIN_FILE=../conan_toolchain.cmake {}".format(build_type)
+    )
     if find_root_path_modes.package:
-        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE={}".format(find_root_path_modes.package)
+        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE={}".format(
+            find_root_path_modes.package
+        )
     if find_root_path_modes.library:
-        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY={}".format(find_root_path_modes.library)
+        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY={}".format(
+            find_root_path_modes.library
+        )
     if find_root_path_modes.framework:
-        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_FRAMEWORK={}".format(find_root_path_modes.framework)
+        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_FRAMEWORK={}".format(
+            find_root_path_modes.framework
+        )
     if find_root_path_modes.include:
-        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE={}".format(find_root_path_modes.include)
+        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE={}".format(
+            find_root_path_modes.include
+        )
     if find_root_path_modes.program:
-        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM={}".format(find_root_path_modes.program)
+        cmake_command += " -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM={}".format(
+            find_root_path_modes.program
+        )
     return cmake_command
 
 
 @pytest.mark.tool("cmake")
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
 @pytest.mark.parametrize("package", ["hello", "zlib"])
 @pytest.mark.parametrize("find_package", ["module", "config"])
 @pytest.mark.parametrize(
@@ -57,9 +77,12 @@ def _cmake_command_toolchain(find_root_path_modes):
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
-def test_cmaketoolchain_path_find_package(package, find_package, settings, find_root_path_modes):
+def test_cmaketoolchain_path_find_package(
+    package, find_package, settings, find_root_path_modes
+):
     """Test with user "Hello" and also ZLIB one, to check that package ZLIB
     has priority over the CMake system one
     """
@@ -94,25 +117,41 @@ def test_cmaketoolchain_path_find_package(package, find_package, settings, find_
         """).format(package=package)
 
     client.save({"CMakeLists.txt": consumer}, clean_first=True)
-    client.run("install --requires={}/0.1 -g CMakeToolchain {}".format(package, settings))
+    client.run(
+        "install --requires={}/0.1 -g CMakeToolchain {}".format(package, settings)
+    )
 
     with client.chdir("build"):
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
     assert "Conan: Target declared" not in client.out
-    assert "HELLO FROM THE {package} FIND PACKAGE!".format(package=package) in client.out
+    assert (
+        "HELLO FROM THE {package} FIND PACKAGE!".format(package=package) in client.out
+    )
 
     # If using the CMakeDeps generator, the in-package .cmake will be ignored
     # But it is still possible to include(owncmake)
-    client.run("install --requires={}/0.1 -g CMakeToolchain -g CMakeDeps {}".format(package, settings))
-    with client.chdir("build2"):  # A clean folder, not the previous one, CMake cache doesnt affect
+    client.run(
+        "install --requires={}/0.1 -g CMakeToolchain -g CMakeDeps {}".format(
+            package, settings
+        )
+    )
+    with client.chdir(
+        "build2"
+    ):  # A clean folder, not the previous one, CMake cache doesnt affect
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
-    assert "Conan: Target declared '{package}::{package}'".format(package=package) in client.out
-    assert "HELLO FROM THE {package} FIND PACKAGE!".format(package=package) not in client.out
+    assert (
+        "Conan: Target declared '{package}::{package}'".format(package=package)
+        in client.out
+    )
+    assert (
+        "HELLO FROM THE {package} FIND PACKAGE!".format(package=package)
+        not in client.out
+    )
 
 
 @pytest.mark.tool("cmake")
 def test_cmaketoolchain_path_find_package_editable():
-    """ make sure a package in editable mode that contains a xxxConfig.cmake file can find that
+    """make sure a package in editable mode that contains a xxxConfig.cmake file can find that
     file in the user folder
     """
     client = TestClient()
@@ -140,10 +179,14 @@ def test_cmaketoolchain_path_find_package_editable():
         project(MyHello NONE)
         find_package(hello REQUIRED)
         """)
-    client.save({"dep/conanfile.py": conanfile,
-                 "dep/cmake/helloConfig.cmake": find,
-                 "consumer/conanfile.txt": "[requires]\nhello/0.1\n[generators]\nCMakeToolchain",
-                 "consumer/CMakeLists.txt": consumer})
+    client.save(
+        {
+            "dep/conanfile.py": conanfile,
+            "dep/cmake/helloConfig.cmake": find,
+            "consumer/conanfile.txt": "[requires]\nhello/0.1\n[generators]\nCMakeToolchain",
+            "consumer/CMakeLists.txt": consumer,
+        }
+    )
     with client.chdir("dep"):
         client.run("install .")
         client.run("editable add . --name=hello --version=0.1")
@@ -152,15 +195,23 @@ def test_cmaketoolchain_path_find_package_editable():
         client.run("install .")
 
         with client.chdir("build"):
-            build_type = "-DCMAKE_BUILD_TYPE=Release" if platform.system() != "Windows" else ""
-            cmake_command = "cmake .. -DCMAKE_TOOLCHAIN_FILE=../conan_toolchain.cmake {}".format(
-                build_type)
+            build_type = (
+                "-DCMAKE_BUILD_TYPE=Release" if platform.system() != "Windows" else ""
+            )
+            cmake_command = (
+                "cmake .. -DCMAKE_TOOLCHAIN_FILE=../conan_toolchain.cmake {}".format(
+                    build_type
+                )
+            )
             client.run_command(cmake_command)
         assert "Conan: Target declared" not in client.out
         assert "HELLO FROM THE hello FIND PACKAGE!" in client.out
 
 
 @pytest.mark.tool("cmake")
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
 @pytest.mark.parametrize(
     "settings",
     [
@@ -172,15 +223,20 @@ def test_cmaketoolchain_path_find_package_editable():
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
 @pytest.mark.parametrize(
-    "builddir", ["os.path.join('hello', 'cmake')", "self.package_folder", '"."'],
+    "builddir",
+    ["os.path.join('hello', 'cmake')", "self.package_folder", '"."'],
 )
-def test_cmaketoolchain_path_find_package_real_config(settings, find_root_path_modes, builddir):
+def test_cmaketoolchain_path_find_package_real_config(
+    settings, find_root_path_modes, builddir
+):
     client = TestClient()
 
-    conanfile = textwrap.dedent("""
+    conanfile = textwrap.dedent(
+        """
         from conan import ConanFile
         from conan.tools.cmake import CMake
         import os
@@ -202,7 +258,8 @@ def test_cmaketoolchain_path_find_package_real_config(settings, find_root_path_m
 
             def package_info(self):
                 self.cpp_info.builddirs.append({})
-        """.format(builddir))
+        """.format(builddir)
+    )
     cmake = textwrap.dedent("""
         cmake_minimum_required(VERSION 3.15)
         project(MyHello NONE)
@@ -218,8 +275,7 @@ def test_cmaketoolchain_path_find_package_real_config(settings, find_root_path_m
             NAMESPACE hello::
         )
         """)
-    client.save({"conanfile.py": conanfile,
-                 "CMakeLists.txt": cmake})
+    client.save({"conanfile.py": conanfile, "CMakeLists.txt": cmake})
     client.run("create . --name=hello --version=0.1 {}".format(settings))
 
     consumer = textwrap.dedent("""
@@ -239,14 +295,23 @@ def test_cmaketoolchain_path_find_package_real_config(settings, find_root_path_m
 
     # If using the CMakeDeps generator, the in-package .cmake will be ignored
     # But it is still possible to include(owncmake)
-    client.run("install --requires=hello/0.1 -g CMakeToolchain -g CMakeDeps {}".format(settings))
+    client.run(
+        "install --requires=hello/0.1 -g CMakeToolchain -g CMakeDeps {}".format(
+            settings
+        )
+    )
 
-    with client.chdir("build2"):  # A clean folder, not the previous one, CMake cache doesnt affect
+    with client.chdir(
+        "build2"
+    ):  # A clean folder, not the previous one, CMake cache doesnt affect
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
     assert "Conan: Target declared 'hello::hello'" in client.out
 
 
 @pytest.mark.tool("cmake")
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
 @pytest.mark.parametrize("require_type", ["requires", "tool_requires"])
 @pytest.mark.parametrize(
     "settings",
@@ -259,9 +324,12 @@ def test_cmaketoolchain_path_find_package_real_config(settings, find_root_path_m
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
-def test_cmaketoolchain_path_include_cmake_modules(require_type, settings, find_root_path_modes):
+def test_cmaketoolchain_path_include_cmake_modules(
+    require_type, settings, find_root_path_modes
+):
     """Test that cmake module files in builddirs of requires and tool_requires
     are accessible with include() in consumer CMakeLists
     """
@@ -285,25 +353,34 @@ def test_cmaketoolchain_path_include_cmake_modules(require_type, settings, find_
     br_flag = "--build-require" if require_type != "requires" else ""
     client.run("create . --name=hello --version=0.1 {} {}".format(settings, br_flag))
 
-    conanfile = textwrap.dedent("""
+    conanfile = textwrap.dedent(
+        """
         from conan import ConanFile
         class PkgConan(ConanFile):
             settings = "os", "compiler", "arch", "build_type"
             {require_type} = "hello/0.1"
-    """.format(require_type=require_type))
+    """.format(require_type=require_type)
+    )
     consumer = textwrap.dedent("""
         cmake_minimum_required(VERSION 3.15)
         project(MyHello NONE)
         include(myowncmake)
     """)
-    client.save({"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True)
-    client.run("install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings))
+    client.save(
+        {"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True
+    )
+    client.run(
+        "install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings)
+    )
     with client.chdir("build"):
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
     assert "MYOWNCMAKE FROM hello!" in client.out
 
 
 @pytest.mark.tool("cmake")
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
 @pytest.mark.parametrize(
     "settings",
     [
@@ -315,7 +392,8 @@ def test_cmaketoolchain_path_include_cmake_modules(require_type, settings, find_
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
 def test_cmaketoolchain_path_find_file_find_path(settings, find_root_path_modes):
     """Test that headers in includedirs of requires can be found with
@@ -359,6 +437,9 @@ def test_cmaketoolchain_path_find_file_find_path(settings, find_root_path_modes)
 
 
 @pytest.mark.tool("cmake")
+@pytest.mark.skipif(
+    __import__("shutil").which("cmake") is None, reason="cmake not available"
+)
 @pytest.mark.parametrize(
     "settings",
     [
@@ -370,7 +451,8 @@ def test_cmaketoolchain_path_find_file_find_path(settings, find_root_path_modes)
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
 def test_cmaketoolchain_path_find_library(settings, find_root_path_modes):
     """Test that libraries in libdirs of requires can be found with
@@ -415,8 +497,12 @@ def test_cmaketoolchain_path_find_library(settings, find_root_path_modes):
             message("Found hello lib: ${HELLOLIB}")
         endif()
     """)
-    client.save({"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True)
-    client.run("install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings))
+    client.save(
+        {"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True
+    )
+    client.run(
+        "install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings)
+    )
     with client.chdir("build"):
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
     assert "Found hello lib" in client.out
@@ -438,7 +524,8 @@ def test_cmaketoolchain_path_find_library(settings, find_root_path_modes):
     ],
 )
 @pytest.mark.parametrize(
-    "find_root_path_modes", [find_root_path_modes_default, find_root_path_modes_cross_build],
+    "find_root_path_modes",
+    [find_root_path_modes_default, find_root_path_modes_cross_build],
 )
 def test_cmaketoolchain_path_find_program(settings, find_root_path_modes):
     """Test that executables in bindirs of tool_requires can be found with
@@ -482,8 +569,12 @@ def test_cmaketoolchain_path_find_program(settings, find_root_path_modes):
             message("Found hello prog: ${HELLOPROG}")
         endif()
     """)
-    client.save({"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True)
-    client.run("install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings))
+    client.save(
+        {"conanfile.py": conanfile, "CMakeLists.txt": consumer}, clean_first=True
+    )
+    client.run(
+        "install . --name=pkg --version=0.1 -g CMakeToolchain {}".format(settings)
+    )
     with client.chdir("build"):
         client.run_command(_cmake_command_toolchain(find_root_path_modes))
     assert "Found hello prog" in client.out
