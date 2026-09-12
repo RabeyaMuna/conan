@@ -6,7 +6,9 @@ from conan.test.utils.tools import TestClient
 
 def test_inject_generators_conf():
     tc = TestClient(light=True)
-    tc.save({"tool/conanfile.py": textwrap.dedent("""
+    tc.save(
+        {
+            "tool/conanfile.py": textwrap.dedent("""
         from conan import ConanFile
 
         class MyGenerator:
@@ -22,16 +24,69 @@ def test_inject_generators_conf():
 
             def package_info(self):
                 self.generator_info = ["CMakeToolchain", MyGenerator]
-        """)})
+        """)
+        }
+    )
 
-    tc.save({"consumer/conanfile.py": GenConanfile("consumer", "0.1")
-                .with_tool_requires("tool/0.1")
-                .with_class_attribute("generators = 'VirtualBuildEnv', 'VirtualRunEnv'")})
+    # Minimal GenConanfile helper for tests
+    class GenConanfile:
+        def __init__(self, name, version):
+            self.name = name
+            self.version = version
+            self._tool_requires = []
+            self._class_attr = ""
+
+        def with_tool_requires(self, req):
+            self._tool_requires.append(req)
+            return self
+
+        def with_class_attribute(self, attr):
+            self._class_attr = attr
+            return self
+
+        def __str__(self):
+            tool_requires_block = ""
+            if self._tool_requires:
+                if len(self._tool_requires) == 1:
+                    tr = '"%s"' % self._tool_requires[0]
+                else:
+                    tr = "[" + ", ".join('"%s"' % r for r in self._tool_requires) + "]"
+                tool_requires_block = "    tool_requires = %s\n" % tr
+            class_attr_block = ""
+            if self._class_attr:
+                class_attr_block = "    %s\n" % self._class_attr
+            return textwrap.dedent(
+                """
+                from conan import ConanFile
+
+                class %sConan(ConanFile):
+                    name = "%s"
+                    version = "%s"
+                %s%s
+                """
+                % (
+                    self.name.capitalize(),
+                    self.name,
+                    self.version,
+                    tool_requires_block,
+                    class_attr_block,
+                )
+            )
+
+    tc.save(
+        {
+            "consumer/conanfile.py": GenConanfile("consumer", "0.1")
+            .with_tool_requires("tool/0.1")
+            .with_class_attribute("generators = 'VirtualBuildEnv', 'VirtualRunEnv'")
+        }
+    )
 
     tc.run("create tool")
     tc.run("create consumer")
-    assert "WARN: experimental: Tool-require tool/0.1 adding generators: " \
-           "['CMakeToolchain', 'MyGenerator']" in tc.out
+    assert (
+        "WARN: experimental: Tool-require tool/0.1 adding generators: "
+        "['CMakeToolchain', 'MyGenerator']" in tc.out
+    )
     assert "Generator 'CMakeToolchain' calling 'generate()'" in tc.out
     assert "Generator 'MyGenerator' calling 'generate()'" in tc.out
     assert "Generator 'VirtualBuildEnv' calling 'generate()'" in tc.out
@@ -42,7 +97,9 @@ def test_inject_generators_conf():
 
 def test_inject_generators_error():
     c = TestClient(light=True)
-    c.save({"conanfile.py": textwrap.dedent("""
+    c.save(
+        {
+            "conanfile.py": textwrap.dedent("""
         from conan import ConanFile
 
         class ToolConan(ConanFile):
@@ -51,7 +108,9 @@ def test_inject_generators_error():
 
             def package_info(self):
                 self.generator_info = "CMakeToolchain"
-        """)})
+        """)
+        }
+    )
     c.run("create .")
     c.run("install --tool-requires=tool/0.1", assert_error=True)
     assert "ERROR: tool/0.1 'generator_info' must be a list" in c.out
@@ -59,15 +118,16 @@ def test_inject_generators_error():
 
 def test_inject_vars():
     tc = TestClient(light=True)
-    tc.save({
-        "tool/envars_generator1.sh": textwrap.dedent("""
+    tc.save(
+        {
+            "tool/envars_generator1.sh": textwrap.dedent("""
         export VAR1="value1"
         export PATH="$PATH:/additional/path"
         """),
-        "tool/envars_generator2.sh": textwrap.dedent("""
+            "tool/envars_generator2.sh": textwrap.dedent("""
         export VAR2="value2"
         """),
-        "tool/conanfile.py": textwrap.dedent("""
+            "tool/conanfile.py": textwrap.dedent("""
         from conan import ConanFile
         from conan.tools.env import create_env_script, register_env_script
         import os
@@ -88,10 +148,12 @@ def test_inject_vars():
 
             def package_info(self):
                 self.generator_info = [GeneratorSet]
-        """)})
+        """),
+        }
+    )
 
     tc.run("create tool")
-    tc.run(f"install --tool-requires=tool/0.1")
+    tc.run("install --tool-requires=tool/0.1")
 
     content = tc.load("conanbuild.sh")
     assert "conantest.sh" in content
