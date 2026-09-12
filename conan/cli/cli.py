@@ -10,12 +10,20 @@ from collections import defaultdict
 from difflib import get_close_matches
 from inspect import getmembers
 
-from conan.api.conan_api import ConanAPI
-from conan.api.output import ConanOutput, Color, cli_out_write, LEVEL_TRACE
-from conan.cli.command import ConanSubCommand
-from conan.cli.exit_codes import SUCCESS, ERROR_MIGRATION, ERROR_GENERAL, USER_CTRL_C, \
-    ERROR_SIGTERM, USER_CTRL_BREAK, ERROR_INVALID_CONFIGURATION, ERROR_UNEXPECTED
 from conan import __version__
+from conan.api.conan_api import ConanAPI
+from conan.api.output import LEVEL_TRACE, Color, ConanOutput, cli_out_write
+from conan.cli.command import ConanSubCommand
+from conan.cli.exit_codes import (
+    ERROR_GENERAL,
+    ERROR_INVALID_CONFIGURATION,
+    ERROR_MIGRATION,
+    ERROR_SIGTERM,
+    ERROR_UNEXPECTED,
+    SUCCESS,
+    USER_CTRL_BREAK,
+    USER_CTRL_C,
+)
 from conan.errors import ConanException, ConanInvalidConfiguration, ConanMigrationError
 
 _CONAN_INTERNAL_CUSTOM_COMMANDS_PATH = "_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH"
@@ -26,11 +34,15 @@ class Cli:
     parsing of parameters and delegates functionality to the conan python api. It can also show the
     help of the tool.
     """
-    _builtin_commands = None  # Caching the builtin commands, no need to load them over and over
+
+    _builtin_commands = (
+        None  # Caching the builtin commands, no need to load them over and over
+    )
 
     def __init__(self, conan_api):
-        assert isinstance(conan_api, ConanAPI), \
-            "Expected 'Conan' type, got '{}'".format(type(conan_api))
+        assert isinstance(
+            conan_api, ConanAPI
+        ), "Expected 'Conan' type, got '{}'".format(type(conan_api))
         self._conan_api = conan_api
         self._conan_api.command.cli = self
         self._groups = defaultdict(list)
@@ -38,10 +50,14 @@ class Cli:
 
     def add_commands(self):
         if Cli._builtin_commands is None:
-            conan_cmd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "commands")
+            conan_cmd_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "commands"
+            )
             for module in pkgutil.iter_modules([conan_cmd_path]):
                 module_name = module[1]
-                self._add_command("conan.cli.commands.{}".format(module_name), module_name)
+                self._add_command(
+                    "conan.cli.commands.{}".format(module_name), module_name
+                )
             Cli._builtin_commands = self._commands.copy()
         else:
             self._commands = Cli._builtin_commands.copy()
@@ -49,14 +65,18 @@ class Cli:
             for k, v in self._commands.items():  # Fill groups data too
                 self._groups[v.group].append(k)
 
-        conan_custom_commands_path = os.path.join(self._conan_api.cache_folder, "extensions",
-                                                  "commands")
+        conan_custom_commands_path = os.path.join(
+            self._conan_api.cache_folder, "extensions", "commands"
+        )
         # Important! This variable should be only used for testing/debugging purpose
         developer_custom_commands_path = os.getenv(_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH)
         # Notice that in case of having same custom commands file names, the developer one has
         # preference over the Conan default location because of the sys.path.append(xxxx)
-        custom_commands_folders = [developer_custom_commands_path, conan_custom_commands_path] \
-            if developer_custom_commands_path else [conan_custom_commands_path]
+        custom_commands_folders = (
+            [developer_custom_commands_path, conan_custom_commands_path]
+            if developer_custom_commands_path
+            else [conan_custom_commands_path]
+        )
 
         for custom_commands_path in custom_commands_folders:
             if not os.path.isdir(custom_commands_path):
@@ -69,8 +89,10 @@ class Cli:
                     try:
                         self._add_command(module_name, module_name.replace("cmd_", ""))
                     except Exception as e:
-                        ConanOutput().error(f"Error loading custom command '{module_name}.py': {e}",
-                                            error_type="exception")
+                        ConanOutput().error(
+                            f"Error loading custom command '{module_name}.py': {e}",
+                            error_type="exception",
+                        )
             # layers
             for folder in os.listdir(custom_commands_path):
                 layer_folder = os.path.join(custom_commands_path, folder)
@@ -82,18 +104,27 @@ class Cli:
                     if module_name.startswith("cmd_"):
                         module_path = f"{folder}.{module_name}"
                         try:
-                            self._add_command(module_path, module_name.replace("cmd_", ""),
-                                              package=folder)
+                            self._add_command(
+                                module_path,
+                                module_name.replace("cmd_", ""),
+                                package=folder,
+                            )
                         except Exception as e:
-                            ConanOutput().error(f"Error loading custom command {module_path}: {e}",
-                                                error_type="exception")
+                            ConanOutput().error(
+                                f"Error loading custom command {module_path}: {e}",
+                                error_type="exception",
+                            )
 
     def _add_command(self, import_path, method_name, package=None):
         try:
             imported_module = importlib.import_module(import_path)
             command_wrapper = getattr(imported_module, method_name)
             if command_wrapper.doc:
-                name = f"{package}:{command_wrapper.name}" if package else command_wrapper.name
+                name = (
+                    f"{package}:{command_wrapper.name}"
+                    if package
+                    else command_wrapper.name
+                )
                 self._commands[name] = command_wrapper
                 # Avoiding duplicated command help messages
                 if name not in self._groups[command_wrapper.group]:
@@ -103,19 +134,22 @@ class Cli:
                     if name.startswith("{}_".format(method_name)):
                         command_wrapper.add_subcommand(value)
                     else:
-                        raise ConanException("The name for the subcommand method should "
-                                             "begin with the main command name + '_'. "
-                                             "i.e. {}_<subcommand_name>".format(method_name))
+                        raise ConanException(
+                            "The name for the subcommand method should "
+                            "begin with the main command name + '_'. "
+                            "i.e. {}_<subcommand_name>".format(method_name)
+                        )
         except AttributeError:
-            raise ConanException("There is no {} method defined in {}".format(method_name,
-                                                                              import_path))
+            raise ConanException(
+                "There is no {} method defined in {}".format(method_name, import_path)
+            )
 
     def _print_similar(self, command):
-        """ Looks for similar commands and prints them if found.
-        """
+        """Looks for similar commands and prints them if found."""
         output = ConanOutput()
         matches = get_close_matches(
-            word=command, possibilities=self._commands.keys(), n=5, cutoff=0.75)
+            word=command, possibilities=self._commands.keys(), n=5, cutoff=0.75
+        )
 
         if len(matches) == 0:
             return
@@ -135,7 +169,7 @@ class Cli:
         Prints a summary of all commands.
         """
         max_len = max((len(c) for c in self._commands)) + 1
-        line_format = '{{: <{}}}'.format(max_len)
+        line_format = "{{: <{}}}".format(max_len)
 
         for group_name, comm_names in sorted(self._groups.items()):
             cli_out_write("\n" + group_name + " commands", Color.BRIGHT_MAGENTA)
@@ -144,7 +178,7 @@ class Cli:
                 cli_out_write(line_format.format(name), Color.GREEN, endline="")
 
                 # Help will be all the lines up to the first empty one
-                docstring_lines = self._commands[name].doc.split('\n')
+                docstring_lines = self._commands[name].doc.split("\n")
                 start = False
                 data = []
                 for line in docstring_lines:
@@ -156,14 +190,16 @@ class Cli:
                         continue
                     data.append(line)
 
-                txt = textwrap.fill(' '.join(data), 80, subsequent_indent=" " * (max_len + 2))
+                txt = textwrap.fill(
+                    " ".join(data), 80, subsequent_indent=" " * (max_len + 2)
+                )
                 cli_out_write(txt)
 
         cli_out_write("")
         cli_out_write('Type "conan <command> -h" for help', Color.BRIGHT_MAGENTA)
 
     def run(self, *args):
-        """ Entry point for executing commands, dispatcher to class
+        """Entry point for executing commands, dispatcher to class
         methods
         """
         output = ConanOutput()
@@ -184,7 +220,9 @@ class Cli:
                 self._output_help_cli()
                 return
 
-            output.info("'%s' is not a Conan command. See 'conan --help'." % command_argument)
+            output.info(
+                "'%s' is not a Conan command. See 'conan --help'." % command_argument
+            )
             output.info("")
             self._print_similar(command_argument)
             raise ConanException("Unknown command %s" % str(exc))
@@ -196,22 +234,36 @@ class Cli:
             # must be a local-import to get updated value
             if ConanOutput.level_allowed(LEVEL_TRACE):
                 print(traceback.format_exc(), file=sys.stderr)
+            # Provide migration hint if applicable
             self._conan2_migrate_recipe_msg(e)
-            raise
+            # Emit a user-friendly error message and route to centralized
+            # exception handling to exit with the appropriate code.
+            try:
+                output.error(str(e))
+            except Exception:
+                # If output.error fails for some reason, continue to centralized handling
+                pass
+            # Use the class-level exception exit handler to ensure consistent CLI exit
+            # behavior instead of re-raising raw exceptions (which would expose tracebacks).
+            self.exception_exit_error(e)
 
     @staticmethod
     def _conan2_migrate_recipe_msg(exception):
         message = str(exception)
 
-        result = re.search(r"Package '(.*)' not resolved: .*: Cannot load recipe", message)
+        result = re.search(
+            r"Package '(.*)' not resolved: .*: Cannot load recipe", message
+        )
         if result:
             pkg = result.group(1)
-            error = "*********************************************************\n" \
-                    f"Recipe '{pkg}' seems broken.\n" \
-                    f"It is possible that this recipe is not Conan 2.0 ready\n"\
-                    "If the recipe comes from ConanCenter, report it at https://github.com/conan-io/conan-center-index/issues\n" \
-                    "If it is your recipe, check if it is updated to 2.0\n" \
-                    "*********************************************************\n"
+            error = (
+                "*********************************************************\n"
+                f"Recipe '{pkg}' seems broken.\n"
+                f"It is possible that this recipe is not Conan 2.0 ready\n"
+                "If the recipe comes from ConanCenter, report it at https://github.com/conan-io/conan-center-index/issues\n"
+                "If it is your recipe, check if it is updated to 2.0\n"
+                "*********************************************************\n"
+            )
             ConanOutput().writeln(error, fg=Color.BRIGHT_MAGENTA)
 
     @staticmethod
@@ -227,7 +279,9 @@ class Cli:
             return ERROR_GENERAL
         if isinstance(exception, SystemExit):
             if exception.code != 0:
-                output.error("Exiting with code: %d" % exception.code, error_type="exception")
+                output.error(
+                    "Exiting with code: %d" % exception.code, error_type="exception"
+                )
             return exception.code
 
         assert isinstance(exception, Exception)
@@ -240,10 +294,13 @@ def _warn_python_version():
     version = sys.version_info
     if version.minor == 6:
         ConanOutput().writeln("")
-        ConanOutput().warning("*"*80, warn_tag="deprecated")
-        ConanOutput().warning("Python 3.6 is end-of-life since 2021. "
-                              "Conan future versions will drop support for it, "
-                              "please upgrade Python", warn_tag="deprecated")
+        ConanOutput().warning("*" * 80, warn_tag="deprecated")
+        ConanOutput().warning(
+            "Python 3.6 is end-of-life since 2021. "
+            "Conan future versions will drop support for it, "
+            "please upgrade Python",
+            warn_tag="deprecated",
+        )
         ConanOutput().warning("*" * 80, warn_tag="deprecated")
 
 
@@ -256,13 +313,13 @@ def _warn_frozen_center(conan_api):
                 "Starting from Conan 2.9.2, the default remote is 'center2.conan.io'. \n"
                 "It is recommended to update to the new remote using the following command:\n"
                 f"'conan remote update {r.name} --url=\"https://center2.conan.io\"'",
-                warn_tag="deprecated"
+                warn_tag="deprecated",
             )
             break
 
 
 def main(args):
-    """ main entry point of the conan application, using a Command to
+    """main entry point of the conan application, using a Command to
     parse parameters
 
     Exit codes for conan command:
@@ -285,21 +342,21 @@ def main(args):
         sys.exit(ERROR_GENERAL)
 
     def ctrl_c_handler(_, __):
-        print('You pressed Ctrl+C!')
+        print("You pressed Ctrl+C!")
         sys.exit(USER_CTRL_C)
 
     def sigterm_handler(_, __):
-        print('Received SIGTERM!')
+        print("Received SIGTERM!")
         sys.exit(ERROR_SIGTERM)
 
     def ctrl_break_handler(_, __):
-        print('You pressed Ctrl+Break!')
+        print("You pressed Ctrl+Break!")
         sys.exit(USER_CTRL_BREAK)
 
     signal.signal(signal.SIGINT, ctrl_c_handler)
     signal.signal(signal.SIGTERM, sigterm_handler)
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         signal.signal(signal.SIGBREAK, ctrl_break_handler)
 
     cli = Cli(conan_api)
