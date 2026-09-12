@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from calendar import timegm
 
 import jwt
 
@@ -15,8 +14,10 @@ class JWTCredentialsManager:
 
     def get_token_for(self, user):
         """Generates a token with the brl_user and additional data dict if needed"""
-        profile_fields = {"user": user,
-                          "exp": timegm((datetime.now(timezone.utc) + self.expire_time).timetuple())}
+        profile_fields = {
+            "user": user,
+            "exp": int((datetime.now(timezone.utc) + self.expire_time).timestamp()),
+        }
         return jwt.encode(profile_fields, self.secret, algorithm="HS256")
 
     def get_user(self, token):
