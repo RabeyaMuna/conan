@@ -37,16 +37,24 @@ def base_profile():
         """)
 
 
-@pytest.mark.parametrize("build_type", ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"])
-@pytest.mark.tool("bazel", "6.5.0")
+@pytest.mark.parametrize(
+    "build_type", ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"]
+)
+@pytest.mark.skipif(
+    not __import__("shutil").which("bazel"),
+    reason="Required 'bazel' tool version '6.5.0' is not available",
+)
 def test_basic_exe_6x(bazelrc, build_type, base_profile, bazel_output_root_dir):
     client = TestClient(path_with_spaces=False)
-    client.run(f"new bazel_exe -d name=myapp -d version=1.0 -d output_root_dir={bazel_output_root_dir}")
+    client.run(
+        f"new bazel_exe -d name=myapp -d version=1.0 -d output_root_dir={bazel_output_root_dir}"
+    )
     # The build:<config> define several configurations that can be activated by passing
     # the bazel config with tools.google.bazel:configs
     client.save({"mybazelrc": bazelrc})
-    profile = base_profile.format(build_type=build_type,
-                                  curdir=client.current_folder.replace("\\", "/"))
+    profile = base_profile.format(
+        build_type=build_type, curdir=client.current_folder.replace("\\", "/")
+    )
     client.save({"my_profile": profile})
     client.run("create . --profile=./my_profile")
     if build_type != "Debug":
@@ -55,16 +63,24 @@ def test_basic_exe_6x(bazelrc, build_type, base_profile, bazel_output_root_dir):
         assert "myapp/1.0: Hello World Debug!" in client.out
 
 
-@pytest.mark.parametrize("build_type", ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"])
-@pytest.mark.tool("bazel", "7.4.1")
+@pytest.mark.parametrize(
+    "build_type", ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"]
+)
+@pytest.mark.skipif(
+    not __import__("shutil").which("bazel"),
+    reason="Required 'bazel' tool version '7.4.1' is not available",
+)
 def test_basic_exe(bazelrc, build_type, base_profile, bazel_output_root_dir):
     client = TestClient(path_with_spaces=False)
-    client.run(f"new bazel_7_exe -d name=myapp -d version=1.0 -d output_root_dir={bazel_output_root_dir}")
+    client.run(
+        f"new bazel_7_exe -d name=myapp -d version=1.0 -d output_root_dir={bazel_output_root_dir}"
+    )
     # The build:<config> define several configurations that can be activated by passing
     # the bazel config with tools.google.bazel:configs
     client.save({"mybazelrc": bazelrc})
-    profile = base_profile.format(build_type=build_type,
-                                  curdir=client.current_folder.replace("\\", "/"))
+    profile = base_profile.format(
+        build_type=build_type, curdir=client.current_folder.replace("\\", "/")
+    )
     client.save({"my_profile": profile})
     client.run("create . --profile=./my_profile")
     if build_type != "Debug":
@@ -73,19 +89,27 @@ def test_basic_exe(bazelrc, build_type, base_profile, bazel_output_root_dir):
         assert "myapp/1.0: Hello World Debug!" in client.out
 
 
-@pytest.mark.tool("bazel", "8.0.0")
+@pytest.mark.skipif(
+    not __import__("shutil").which("bazel"),
+    reason="Required 'bazel' tool version '8.0.0' is not available",
+)
 def test_basic_lib(bazelrc, base_profile, bazel_output_root_dir):
     """
     Issue related: https://github.com/conan-io/conan/issues/17438
     """
     client = TestClient(path_with_spaces=False)
-    client.run(f"new bazel_7_lib -d name=mylib -d version=1.0 -d output_root_dir={bazel_output_root_dir}")
+    client.run(
+        f"new bazel_7_lib -d name=mylib -d version=1.0 -d output_root_dir={bazel_output_root_dir}"
+    )
     client.run("create .")
     assert "mylib/1.0: Hello World Release!" in client.out
 
 
 @pytest.mark.parametrize("shared", [False, True])
-@pytest.mark.tool("bazel", "6.5.0")
+@pytest.mark.skipif(
+    not __import__("shutil").which("bazel"),
+    reason="Required 'bazel' tool version '6.5.0' is not available",
+)
 def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
     """
     Testing the next dependencies structure for shared/static libs
@@ -115,7 +139,9 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
     client = TestClient(path_with_spaces=False)
     # A regular library made with Bazel
     with client.chdir("myfirstlib"):
-        client.run(f"new bazel_lib -d name=myfirstlib -d version=1.2.11 -d output_root_dir={bazel_output_root_dir}")
+        client.run(
+            f"new bazel_lib -d name=myfirstlib -d version=1.2.11 -d output_root_dir={bazel_output_root_dir}"
+        )
         conanfile = client.load("conanfile.py")
         conanfile += """
         self.cpp_info.defines.append("MY_DEFINE=\\"MY_VALUE\\"")
@@ -132,11 +158,15 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
         # We prepare a consumer with Bazel (library mysecondlib using myfirstlib)
         # and a test_package with an example executable
         os_ = platform.system()
-        client.run(f"new bazel_lib -d name=mysecondlib -d version=1.0 -d output_root_dir={bazel_output_root_dir}")
+        client.run(
+            f"new bazel_lib -d name=mysecondlib -d version=1.0 -d output_root_dir={bazel_output_root_dir}"
+        )
         conanfile = client.load("conanfile.py")
-        conanfile = conanfile.replace('generators = "BazelToolchain"',
-                                      'generators = "BazelToolchain", "BazelDeps"\n'
-                                      '    requires = "myfirstlib/1.2.11"')
+        conanfile = conanfile.replace(
+            'generators = "BazelToolchain"',
+            'generators = "BazelToolchain", "BazelDeps"\n'
+            '    requires = "myfirstlib/1.2.11"',
+        )
         workspace = textwrap.dedent("""
         load("@//conan:dependencies.bzl", "load_conan_dependencies")
         load_conan_dependencies()
@@ -149,7 +179,8 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
             deps = [ "@myfirstlib//:myfirstlib" ]
         )
         """)
-        bazel_build = textwrap.dedent("""\
+        bazel_build = textwrap.dedent(
+            """\
         cc_library(
             name = "mysecondlib",
             srcs = ["mysecondlib.cpp"],
@@ -162,7 +193,8 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
             shared_lib_name = "libmysecondlib_shared.{}",
             deps = [":mysecondlib"],
         )
-        """.format("dylib" if os_ == "Darwin" else "dll"))
+        """.format("dylib" if os_ == "Darwin" else "dll")
+        )
         mysecondlib_cpp = textwrap.dedent("""
         #include <iostream>
         #include "mysecondlib.h"
@@ -199,11 +231,16 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
         }
         """)
         # Overwriting files
-        client.save({"conanfile.py": conanfile,
-                     "WORKSPACE": workspace,
-                     "main/BUILD": bazel_build_linux if os_ == "Linux" else bazel_build,
-                     "main/mysecondlib.cpp": mysecondlib_cpp if os_ != "Windows" else mysecondlib_cpp_win,
-                     })
+        client.save(
+            {
+                "conanfile.py": conanfile,
+                "WORKSPACE": workspace,
+                "main/BUILD": bazel_build_linux if os_ == "Linux" else bazel_build,
+                "main/mysecondlib.cpp": mysecondlib_cpp
+                if os_ != "Windows"
+                else mysecondlib_cpp_win,
+            }
+        )
 
         client.run(f"create . -o '*:shared={shared}'")
         assert "mysecondlib() First define MY_VALUE and other define 2" in client.out
@@ -211,10 +248,15 @@ def test_transitive_libs_consuming_6x(shared, bazel_output_root_dir):
 
 
 @pytest.mark.parametrize("shared", [False, True])
-@pytest.mark.tool("bazel", "7.4.1")
-@pytest.mark.skipif(platform.system() == "Linux",
-                    reason="Conan CI fails (likely related to parallel "
-                           "tests running??). Skipping it for now!")
+@pytest.mark.skipif(
+    not __import__("shutil").which("bazel"),
+    reason="Required 'bazel' tool version '7.4.1' is not available",
+)
+@pytest.mark.skipif(
+    platform.system() == "Linux",
+    reason="Conan CI fails (likely related to parallel "
+    "tests running??). Skipping it for now!",
+)
 def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
     """
     Testing the next dependencies structure for shared/static libs
@@ -244,7 +286,9 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
     client = TestClient(path_with_spaces=False)
     # A regular library made with Bazel
     with client.chdir("myfirstlib"):
-        client.run(f"new bazel_7_lib -d name=myfirstlib -d version=1.2.11 -d output_root_dir={bazel_output_root_dir}")
+        client.run(
+            f"new bazel_7_lib -d name=myfirstlib -d version=1.2.11 -d output_root_dir={bazel_output_root_dir}"
+        )
         conanfile = client.load("conanfile.py")
         conanfile += """
         self.cpp_info.defines.append("MY_DEFINE=\\"MY_VALUE\\"")
@@ -261,11 +305,15 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
         # We prepare a consumer with Bazel (library mysecondlib using myfirstlib)
         # and a test_package with an example executable
         os_ = platform.system()
-        client.run(f"new bazel_7_lib -d name=mysecondlib -d version=1.0 -d output_root_dir={bazel_output_root_dir}")
+        client.run(
+            f"new bazel_7_lib -d name=mysecondlib -d version=1.0 -d output_root_dir={bazel_output_root_dir}"
+        )
         conanfile = client.load("conanfile.py")
-        conanfile = conanfile.replace('generators = "BazelToolchain"',
-                                      'generators = "BazelToolchain", "BazelDeps"\n'
-                                      '    requires = "myfirstlib/1.2.11"')
+        conanfile = conanfile.replace(
+            'generators = "BazelToolchain"',
+            'generators = "BazelToolchain", "BazelDeps"\n'
+            '    requires = "myfirstlib/1.2.11"',
+        )
         workspace = textwrap.dedent("""
         load_conan_dependencies = use_extension("//conan:conan_deps_module_extension.bzl", "conan_extension")
         use_repo(load_conan_dependencies, "myfirstlib")
@@ -278,7 +326,8 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
             deps = [ "@myfirstlib//:myfirstlib" ]
         )
         """)
-        bazel_build = textwrap.dedent("""\
+        bazel_build = textwrap.dedent(
+            """\
         cc_library(
             name = "mysecondlib",
             srcs = ["mysecondlib.cpp"],
@@ -291,7 +340,8 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
             shared_lib_name = "libmysecondlib_shared.{}",
             deps = [":mysecondlib"],
         )
-        """.format("dylib" if os_ == "Darwin" else "dll"))
+        """.format("dylib" if os_ == "Darwin" else "dll")
+        )
         mysecondlib_cpp = textwrap.dedent("""
         #include <iostream>
         #include "mysecondlib.h"
@@ -328,11 +378,16 @@ def test_transitive_libs_consuming_7x(shared, bazel_output_root_dir):
         }
         """)
         # Overwriting files
-        client.save({"conanfile.py": conanfile,
-                     "MODULE.bazel": workspace,
-                     "main/BUILD": bazel_build_linux if os_ == "Linux" else bazel_build,
-                     "main/mysecondlib.cpp": mysecondlib_cpp if os_ != "Windows" else mysecondlib_cpp_win,
-                     })
+        client.save(
+            {
+                "conanfile.py": conanfile,
+                "MODULE.bazel": workspace,
+                "main/BUILD": bazel_build_linux if os_ == "Linux" else bazel_build,
+                "main/mysecondlib.cpp": mysecondlib_cpp
+                if os_ != "Windows"
+                else mysecondlib_cpp_win,
+            }
+        )
 
         client.run(f"create . -o '*:shared={shared}'")
         assert "mysecondlib() First define MY_VALUE and other define 2" in client.out
