@@ -74,7 +74,7 @@ def test_cmake_toolchain_custom_toolchain():
 
 @pytest.mark.skipif(platform.system() != "Darwin",
                     reason="Single config test, Linux CI still without 3.23")
-@pytest.mark.tool("cmake", "3.23")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 @pytest.mark.parametrize("existing_user_presets", [None, "user_provided", "conan_generated"])
 def test_cmake_user_presets_load(existing_user_presets):
     """
@@ -191,7 +191,7 @@ def test_cmake_toolchain_without_build_type():
 
 
 @pytest.mark.skipif(platform.system() != "Windows", reason="Only on Windows with msvc")
-@pytest.mark.tool("cmake")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 def test_cmake_toolchain_cmake_vs_debugger_environment():
     client = TestClient()
     client.save({"conanfile.py": GenConanfile("pkg", "1.0").with_package_type("shared-library")
@@ -865,7 +865,7 @@ def test_cmake_presets_multiple_settings_multi_config():
     assert "MSVC_LANG2017" in client.out
 
 
-@pytest.mark.tool("cmake", "3.23")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 @pytest.mark.skipif(platform.system() != "Windows", reason="Needs windows")
 # Test both with a local folder and an absolute folder
 @pytest.mark.parametrize("build", ["mybuild", "temp"])
@@ -990,7 +990,7 @@ def test_cmake_presets_with_conanfile_txt():
 
 @pytest.mark.skipif(platform.system() != "Windows", reason="Needs windows")
 @pytest.mark.tool("ninja")
-@pytest.mark.tool("cmake", "3.23")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 def test_cmake_presets_with_conanfile_txt_ninja():
     c = TestClient()
 
@@ -1468,7 +1468,7 @@ def test_no_build_type():
     assert "Don't specify 'build_type' at build time" not in client.out
 
 
-@pytest.mark.tool("cmake", "3.19")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 def test_redirect_stdout():
     client = TestClient()
     conanfile = textwrap.dedent("""
@@ -1539,7 +1539,7 @@ def test_redirect_stdout():
     assert re.search("Install stderr: ''", client.out)
 
 
-@pytest.mark.tool("cmake", "3.23")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 class TestEnvironmentInPresets:
     @pytest.fixture(scope="class")
     def _init_client(self):
@@ -1729,8 +1729,8 @@ class TestEnvironmentInPresets:
         assert "tests passed" in c.out
 
 
-@pytest.mark.tool("cmake")
-@pytest.mark.skipif(platform.system() != "Windows", reason="neeed multi-config")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
+pytest.mark.skipif(platform.system() != "Windows", reason="neeed multi-config")
 def test_cmake_toolchain_cxxflags_multi_config():
     c = TestClient()
     profile_release = textwrap.dedent(r"""
@@ -1821,7 +1821,7 @@ def test_cmake_toolchain_cxxflags_multi_config():
 
 
 @pytest.mark.tool("ninja")
-@pytest.mark.tool("cmake", "3.23")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 def test_cmake_toolchain_ninja_multi_config():
     c = TestClient()
     profile_release = textwrap.dedent(r"""
@@ -1925,7 +1925,7 @@ def test_cmake_toolchain_ninja_multi_config():
     assert 'DEFINE conan_test_complex="1 2"!' in c.out
 
 
-@pytest.mark.tool("cmake")
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")
 @pytest.mark.skipif(platform.system() != "Darwin", reason="Only needs to run once, no need for extra platforms")
 def test_cxx_version_not_overriden_if_hardcoded():
     """Any C++ standard set in the CMakeLists.txt will have priority even if the
@@ -1950,7 +1950,7 @@ def test_cxx_version_not_overriden_if_hardcoded():
     assert "Warning: Standard CMAKE_CXX_STANDARD value defined in conan_toolchain.cmake to 17 has been modified to 17" not in tc.out
 
 
-@pytest.mark.tool("cmake", "3.23")  # Android complains if <3.19
+@pytest.mark.skipif(__import__("shutil").which("cmake") is None, reason="cmake not available")  # Android complains if <3.19
 @pytest.mark.tool("android_ndk")
 @pytest.mark.skipif(platform.system() != "Darwin", reason="NDK only installed on MAC")
 def test_cmake_toolchain_crossbuild_set_cmake_compiler():
