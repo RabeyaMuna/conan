@@ -1,9 +1,24 @@
 import platform
+import subprocess
 import unittest
 
 import pytest
 
 from conan.test.utils.tools import TestClient
+
+
+def _get_gcc_major_version():
+    """Get the GCC major version from the environment."""
+    try:
+        result = subprocess.run(['gcc', '-dumpversion'],
+                              capture_output=True,
+                              text=True,
+                              timeout=5)
+        version = result.stdout.strip()
+        major = version.split('.')[0]
+        return major
+    except (subprocess.SubprocessError, FileNotFoundError, IndexError, ValueError):
+        return "9"  # fallback to default
 
 
 @pytest.mark.tool("meson")
@@ -33,4 +48,5 @@ class TestMesonBase(unittest.TestCase):
             self.assertIn("main _MSVC_LANG2014", self.t.out)
         elif platform.system() == "Linux":
             self.assertIn(f"main {arch_macro['gcc'][host_arch]} defined", self.t.out)
-            self.assertIn("main __GNUC__9", self.t.out)
+            gcc_major = _get_gcc_major_version()
+            self.assertIn(f"main __GNUC__{gcc_major}", self.t.out)
