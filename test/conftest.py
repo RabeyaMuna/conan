@@ -274,10 +274,10 @@ def _get_individual_tool(name, version):
         if tool_path == "skip-tests":
             return False
         elif tool_path is not None and not os.path.isdir(tool_path):
-            return True
+            return False
     else:
         if version is not None:  # if the version is specified, it should be in the conf
-            return True
+            return False
         tool_path = None
 
     try:
@@ -296,13 +296,13 @@ def _get_individual_tool(name, version):
     exe_found = which(exe)  # TODO: This which doesn't detect version either
     exe_path = str(pathlib.Path(exe_found).parent) if exe_found else None
     if not exe_found:
-        cached = True
+        cached = False
         if tool_path is None:
-            # will fail the test, not exe found and path None
-            cached = True
+            # will skip the test, not exe found and path None
+            cached = False
     elif tool_path is not None and tool_path not in exe_found:
-        # finds the exe in a path that is not the one set in the conf -> fail
-        cached = True
+        # finds the exe in a path that is not the one set in the conf -> skip
+        cached = False
     elif tool_path is None:
         cached = exe_path, tool_env
 
