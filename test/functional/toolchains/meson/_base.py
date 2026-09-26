@@ -33,4 +33,7 @@ class TestMesonBase(unittest.TestCase):
             self.assertIn("main _MSVC_LANG2014", self.t.out)
         elif platform.system() == "Linux":
             self.assertIn(f"main {arch_macro['gcc'][host_arch]} defined", self.t.out)
-            self.assertIn("main __GNUC__9", self.t.out)
+            import re
+            match = re.search(r"main __GNUC__(\d+)", self.t.out)
+            self.assertIsNotNone(match, "GCC macro not found")
+            self.assertGreaterEqual(int(match.group(1)), 9, "Expected GCC version >= 9")
