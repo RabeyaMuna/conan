@@ -126,6 +126,11 @@ class ConfigAPI:
         """
         return BUILT_IN_CONFS
 
+    def global_conf_list(self):
+        """ list all the available built-in configurations (same as conf_list)
+        """
+        return BUILT_IN_CONFS
+
     def clean(self):
         """ reset the Conan home folder to a clean state, removing all the user
         custom configuration, custom files, and resetting modified files
