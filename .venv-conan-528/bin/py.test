@@ -1,0 +1,10 @@
+#!/bin/sh
+'''exec' /home/yisenxu/rabeya/mini-swe-agent-ci-based/results/think_repair_deepseek/4cb814c27dd37bbf6ccd194f9d6b2c0a2ac0119d/testbed/.venv-conan-528/bin/python3 "$0" "$@"
+' '''
+# -*- coding: utf-8 -*-
+import re
+import sys
+from pytest import console_main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(console_main())
