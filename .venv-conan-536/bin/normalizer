@@ -1,0 +1,10 @@
+#!/bin/sh
+'''exec' /home/yisenxu/rabeya/mini-swe-agent-ci-based/results/think_repair_deepseek/9dba1fe9efb5435e5e0ad9c9038752d4991343b7/testbed/.venv-conan-536/bin/python3 "$0" "$@"
+' '''
+# -*- coding: utf-8 -*-
+import re
+import sys
+from charset_normalizer.cli import cli_detect
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(cli_detect())
