@@ -419,6 +419,6 @@ def test_export_json():
     c = TestClient(light=True)
     c.save({"conanfile.py": GenConanfile()})
     c.run("export . --name=foo --version=0.1 --format json")
-    info = json.loads(c.stdout)
+    info = json.loads(c.out)
     assert info["reference"] == "foo/0.1#4d670581ccb765839f2239cc8dff8fbd"
     assert len(info) == 1  # Only "reference" key yet

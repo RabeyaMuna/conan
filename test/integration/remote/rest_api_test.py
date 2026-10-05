@@ -197,7 +197,7 @@ from conan import ConanFile
 class MyConan(ConanFile):
     name = "%s"
     version = "%s"
-    settings = arch, compiler, os
+    settings = "arch", "compiler", "os"
 """ % (ref.name, ref.version)
         files[CONANFILE] = content
         files_md5s = {filename: md5(content) for filename, content in files.items()}
