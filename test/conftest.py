@@ -276,7 +276,7 @@ def _get_individual_tool(name, version):
         if tool_path == "skip-tests":
             return False
         elif tool_path is not None and not os.path.isdir(tool_path):
-            return True
+            tool_path = None
     else:
         if version is not None:  # if the version is specified, it should be in the conf
             return True
