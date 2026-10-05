@@ -126,6 +126,14 @@ def test_cpp_info_merge_aggregating_components_first(aggregate_first):
                                            "var2_{}_1".format(n), "var2_{}_2".format(n),
                                            "jar_{}_1".format(n), "jar_{}_2".format(n),
                                            "jar2_{}_1".format(n), "jar2_{}_2".format(n)]
+            assert getattr(cppinfo.components["foo"], n) == ["var_{}_1".format(n),
+                                                             "var_{}_2".format(n)]
+            assert getattr(cppinfo.components["foo2"], n) == ["var2_{}_1".format(n),
+                                                              "var2_{}_2".format(n)]
+            assert getattr(cppinfo.components["boo"], n) == ["jar_{}_1".format(n),
+                                                             "jar_{}_2".format(n)]
+            assert getattr(cppinfo.components["boo2"], n) == ["jar2_{}_1".format(n),
+                                                              "jar2_{}_2".format(n)]
     else:
         for n in _DIRS_VAR_NAMES + _FIELD_VAR_NAMES:
             assert getattr(cppinfo.components["foo"], n) == ["var_{}_1".format(n),
