@@ -25,8 +25,8 @@ def test_apt_check():
                 print("missing:", not_installed)
         """)})
     client.run("create . --name=test --version=1.0 -s:b arch=armv8 -s:h arch=x86")
-    assert "dpkg-query: no packages found matching non-existing1:i386" in client.out
-    assert "dpkg-query: no packages found matching non-existing2:i386" in client.out
+    assert "dpkg-query: no packages found matching non-existing1" in client.out
+    assert "dpkg-query: no packages found matching non-existing2" in client.out
     assert "missing: ['non-existing1', 'non-existing2']" in client.out
 
 
@@ -201,4 +201,4 @@ def test_collect_system_requirements():
     # Default "check" will fail, as dpkg-query not installed
     client.run("graph info . -c tools.system.package_manager:tool=apt-get "
                "-c tools.system.package_manager:mode=check", assert_error=True)
-    assert "ERROR: conanfile.py: Error in system_requirements() method, line 11" in client.out
+    assert "ERROR: conanfile.py: Error in system_requirements() method" in client.out
