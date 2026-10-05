@@ -66,12 +66,13 @@ tools_locations = {
         }},
     'autotools': {"exe": "autoconf"},
     'cmake': {
-        "default": "3.15",
+        "default": "system",
         "3.15": {
             "path": {'Windows': 'C:/tools/cmake/3.15.7/cmake-3.15.7-win64-x64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.15.7/bin',
                      'Linux': '/usr/share/cmake-3.15.7/bin'}
         },
+        "system": {"exe": "cmake"},
         "3.19": {
             "path": {'Windows': 'C:/tools/cmake/3.19.7/cmake-3.19.7-win64-x64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.19.7/bin',
@@ -153,7 +154,7 @@ tools_locations = {
         "system": {"path": {'Windows': "C:/tools/cygwin/bin"}},
     },
     'bazel': {
-        "default": "7",
+        "default": "7.4.1",
         "6.5.0": {"path": {'Linux': '/usr/share/bazel-6.5.0/bin',
                            'Windows': 'C:/tools/bazel/6.5.0',
                            'Darwin': '/Users/runner/Applications/bazel/6.5.0'}},
@@ -171,7 +172,8 @@ tools_locations = {
             "path": {'Linux': '/usr/share/premake',
                      'Windows': 'skip-tests',
                      'Darwin': 'skip-tests'}
-        }
+        },
+        "system": {"exe": "premake5"}
     },
     'xcodegen': {"platform": "Darwin"},
     'apt_get': {"exe": "apt-get"},
@@ -190,9 +192,10 @@ tools_locations = {
         "default": "2.6.0",
         "2.6.0": {
             "path": {'Linux': '/usr/share/qbs/bin'}
-        }
+        },
+        "system": {"exe": "qbs"}
     },
-    "emcc": {},
+    "emcc": {"exe": "emcc"},
     "node": {},
     # TODO: Intel oneAPI is not installed in CI yet. Uncomment this line whenever it's done.
     # "intel_oneapi": {
