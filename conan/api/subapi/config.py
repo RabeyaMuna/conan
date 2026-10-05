@@ -30,6 +30,10 @@ class ConfigAPI:
         """
         return self._conan_api.cache_folder
 
+    def global_conf_list(self):
+        """Return all available global configuration items."""
+        return BUILT_IN_CONFS
+
     def install(self, path_or_url, verify_ssl, config_type=None, args=None,
                 source_folder=None, target_folder=None):
         """ install Conan configuration from a git repo, from a zip file in an http server
