@@ -274,7 +274,7 @@ def _get_individual_tool(name, version):
         if tool_path == "skip-tests":
             return False
         elif tool_path is not None and not os.path.isdir(tool_path):
-            return True
+            tool_path = None
     else:
         if version is not None:  # if the version is specified, it should be in the conf
             return True
@@ -301,8 +301,9 @@ def _get_individual_tool(name, version):
             # will fail the test, not exe found and path None
             cached = True
     elif tool_path is not None and tool_path not in exe_found:
-        # finds the exe in a path that is not the one set in the conf -> fail
-        cached = True
+        # The executable was found, but not under the configured directory.
+        # Still accept it so system PATH tools are not treated as missing.
+        cached = exe_path, tool_env
     elif tool_path is None:
         cached = exe_path, tool_env
 
