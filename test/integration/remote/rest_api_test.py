@@ -1,20 +1,18 @@
 import os
 import unittest
 
-from conan.api.model import Remote
+from conan.api.model import PkgReference, RecipeReference, Remote
 from conan.internal.model.conf import ConfDefinition
 from conan.internal.model.manifest import FileTreeManifest
-from conan.api.model import PkgReference
-from conan.api.model import RecipeReference
-from conan.internal.paths import CONANFILE, CONANINFO, CONAN_MANIFEST
+from conan.internal.paths import CONAN_MANIFEST, CONANFILE, CONANINFO
+from conan.internal.rest.conan_requester import ConanRequester
+from conan.internal.rest.rest_client import RestApiClient
+from conan.internal.util.files import md5, save
 from conan.test.assets.genconanfile import GenConanfile
 from conan.test.utils.env import environment_update
 from conan.test.utils.server_launcher import TestServerLauncher
 from conan.test.utils.test_files import temp_folder
 from conan.test.utils.tools import get_free_port
-from conan.internal.rest.conan_requester import ConanRequester
-from conan.internal.rest.rest_client import RestApiClient
-from conan.internal.util.files import md5, save
 
 
 class RestApiTest(unittest.TestCase):
@@ -29,17 +27,23 @@ class RestApiTest(unittest.TestCase):
             with environment_update({"CONAN_SERVER_PORT": str(get_free_port())}):
                 read_perms = [("*/*@*/*", "private_user")]
                 write_perms = [("*/*@*/*", "private_user")]
-                cls.server = TestServerLauncher(server_capabilities=['ImCool', 'TooCool'],
-                                                read_permissions=read_perms,
-                                                write_permissions=write_perms)
+                cls.server = TestServerLauncher(
+                    server_capabilities=["ImCool", "TooCool"],
+                    read_permissions=read_perms,
+                    write_permissions=write_perms,
+                )
                 cls.server.start()
 
                 config = ConfDefinition()
                 requester = ConanRequester(config)
 
-                remote = Remote("myremote", f"http://127.0.0.1:{cls.server.port}", True, True)
+                remote = Remote(
+                    "myremote", f"http://127.0.0.1:{cls.server.port}", True, True
+                )
                 cls.api = RestApiClient(remote, None, requester, config)
-                cls.api._token = cls.api.authenticate(user="private_user", password="private_pass")
+                cls.api._token = cls.api.authenticate(
+                    user="private_user", password="private_pass"
+                )
 
     @classmethod
     def tearDownClass(cls):
@@ -112,18 +116,22 @@ class RestApiTest(unittest.TestCase):
 
         # Get the info about this ConanFileReference
         info = self.api.search_packages(ref1)
-        self.assertEqual(conan_info, info["1F23223EFDA"]["content"])
+        self.assertEqual(conan_info, info["1F23223EFDA"]["conaninfo.txt"])
 
         # Search packages
         results = self.api.search("HelloOnly*", ignorecase=False)
-        results = [RecipeReference(r.name, r.version, r.user, r.channel, revision=None)
-                   for r in results]
+        results = [
+            RecipeReference(r.name, r.version, r.user, r.channel, revision=None)
+            for r in results
+        ]
         ref1.revision = None
         self.assertEqual(results, [ref1])
 
     def test_remove(self):
         # Upload a conans
-        ref = RecipeReference.loads("MyFirstConan/1.0.0@private_user/testing#myreciperev")
+        ref = RecipeReference.loads(
+            "MyFirstConan/1.0.0@private_user/testing#myreciperev"
+        )
         self._upload_recipe(ref)
         ref.revision = "myreciperev"
         path1 = self.server.server_store.base_folder(ref)
@@ -133,7 +141,9 @@ class RestApiTest(unittest.TestCase):
         self.assertFalse(os.path.exists(path1))
 
     def test_remove_packages(self):
-        ref = RecipeReference.loads("MySecondConan/2.0.0@private_user/testing#myreciperev")
+        ref = RecipeReference.loads(
+            "MySecondConan/2.0.0@private_user/testing#myreciperev"
+        )
         self._upload_recipe(ref)
 
         folders = {}
@@ -170,10 +180,13 @@ class RestApiTest(unittest.TestCase):
             self.assertFalse(os.path.exists(folders[sha]))
 
     def _upload_package(self, package_reference, base_files=None):
-
-        files = {"conanfile.py": GenConanfile("3").with_requires("1", "12").with_exports("*"),
-                 "hello.cpp": "hello",
-                 "conanmanifest.txt": ""}
+        files = {
+            "conanfile.py": GenConanfile("3")
+            .with_requires("1", "12")
+            .with_exports("*"),
+            "hello.cpp": "hello",
+            "conanmanifest.txt": "",
+        }
         if base_files:
             files.update(base_files)
 
@@ -187,7 +200,6 @@ class RestApiTest(unittest.TestCase):
         self.api.upload_package(package_reference, abs_paths)
 
     def _upload_recipe(self, ref, base_files=None):
-
         files = {"conanfile.py": GenConanfile("3").with_requires("1", "12")}
         if base_files:
             files.update(base_files)
