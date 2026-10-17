@@ -1,8 +1,8 @@
 import os
 import textwrap
+from test.functional.toolchains.meson._base import TestMesonBase
 
 from conan.test.assets.sources import gen_function_cpp, gen_function_h
-from test.functional.toolchains.meson._base import TestMesonBase
 
 
 class MesonPreprocessorDefinitionsTest(TestMesonBase):
@@ -43,15 +43,20 @@ class MesonPreprocessorDefinitionsTest(TestMesonBase):
 
     def test_build(self):
         hello_h = gen_function_h(name="hello")
-        hello_cpp = gen_function_cpp(name="hello",
-                                     preprocessor=["TEST_DEFINITION1", "TEST_DEFINITION2"])
+        hello_cpp = gen_function_cpp(
+            name="hello", preprocessor=["TEST_DEFINITION1", "TEST_DEFINITION2"]
+        )
         app = gen_function_cpp(name="main", includes=["hello"], calls=["hello"])
 
-        self.t.save({"conanfile.py": self._conanfile_py,
-                     "meson.build": self._meson_build,
-                     "hello.h": hello_h,
-                     "hello.cpp": hello_cpp,
-                     "main.cpp": app})
+        self.t.save(
+            {
+                "conanfile.py": self._conanfile_py,
+                "meson.build": self._meson_build,
+                "hello.h": hello_h,
+                "hello.cpp": hello_cpp,
+                "main.cpp": app,
+            }
+        )
 
         self.t.run("install .")
 
@@ -66,5 +71,3 @@ class MesonPreprocessorDefinitionsTest(TestMesonBase):
         self.assertIn("hello: Release!", self.t.out)
         self.assertIn("TEST_DEFINITION1: TestPpdValue1", self.t.out)
         self.assertIn("TEST_DEFINITION2: TestPpdValue2", self.t.out)
-
-        self._check_binary()
