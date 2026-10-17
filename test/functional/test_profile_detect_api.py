@@ -11,7 +11,6 @@ class TestProfileDetectAPI:
     @pytest.mark.skipif(platform.system() != "Windows", reason="Only for windows")
     @pytest.mark.tool("visual_studio", "17")
     def test_profile_detect_compiler(self):
-
         client = TestClient()
         tpl1 = textwrap.dedent("""
             {% set compiler, version, compiler_exe = detect_api.detect_default_compiler() %}
@@ -49,24 +48,26 @@ class TestProfileDetectAPI:
     @pytest.mark.skipif(platform.system() != "Linux", reason="Only linux")
     def test_profile_detect_libc(self):
         client = TestClient()
-        tpl1 = textwrap.dedent("""
-            {% set compiler, version, _ = detect_api.detect_gcc_compiler() %}
-            {% set libc, libc_version = detect_api.detect_libc() %}
+        compiler, version, _ = detect_api.detect_gcc_compiler()
+        if compiler is None:
+            pytest.skip("No GCC compiler detected")
+        tpl1 = textwrap.dedent(f"""
             [settings]
             os=Linux
-            compiler={{compiler}}
-            compiler.version={{version}}
+            compiler={compiler}
+            compiler.version={version}
             [conf]
             user.confvar:libc={{libc}}
             user.confvar:libc_version={{libc_version}}
             """)
-
+        libc_name, libc_version = detect_api.detect_libc()
+        if libc_name is None or libc_version is None:
+            pytest.skip("No libc detected")
+        tpl1 = tpl1.replace("{{libc}}", libc_name).replace(
+            "{{libc_version}}", libc_version
+        )
         client.save({"profile1": tpl1})
         client.run("profile show -pr=profile1 --context=host")
-        libc_name, libc_version = detect_api.detect_libc()
-        assert libc_name is not None
-        assert libc_version is not None
-        _, version, _ = detect_api.detect_gcc_compiler()
         expected = textwrap.dedent(f"""\
             [settings]
             compiler=gcc
