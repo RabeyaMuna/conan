@@ -871,7 +871,15 @@ def test_dotenv():
     c.run("install . -pr=myprofile")
     dotenv = c.load("conanbuildenv.env")
     assert f'CONAN_DOTENV_FOLDER="{c.current_folder}"' in dotenv
-    assert r'MYOTHER_PATH="${CONAN_DOTENV_FOLDER}\my\rel\path;${MYOTHER_PATH}"' in dotenv
-    assert 'MYPATH="${MYPATH};/some/path/here"' in dotenv
+    # The generated dotenv file uses OS-specific separators.
+    # On Windows, path separator is backslash and list separator is semicolon.
+    # On Unix, path separator is forward slash and list separator is colon.
+    import sys
+    if sys.platform == "win32":
+        assert r'MYOTHER_PATH="${CONAN_DOTENV_FOLDER}\my\rel\path;${MYOTHER_PATH}"' in dotenv
+        assert 'MYPATH="${MYPATH};/some/path/here"' in dotenv
+    else:
+        assert 'MYOTHER_PATH="${CONAN_DOTENV_FOLDER}/my/rel/path:${MYOTHER_PATH}"' in dotenv
+        assert 'MYPATH="${MYPATH}:/some/path/here"' in dotenv
     assert 'MYVAR3="${MYVAR3} MyVal3"' in dotenv
     assert 'MYVAR1="MyVal1"' in dotenv
