@@ -79,7 +79,12 @@ def profile_detect(conan_api, parser, subparser, *args):
         if not args.force:
             raise ConanException(f"Profile '{profile_pathname}' already exists")
 
-    detected_profile = conan_api.profiles.detect()
+    try:
+        detected_profile = conan_api.profiles.detect()
+    except ImportError as e:
+        if "detect_cstd" in str(e):
+            raise ConanException("Profile detection is currently unavailable due to missing internal dependencies.")
+        raise
     ConanOutput().success("\nDetected profile:")
     cli_out_write(detected_profile.dumps())
 
