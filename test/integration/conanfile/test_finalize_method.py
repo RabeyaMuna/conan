@@ -33,7 +33,6 @@ conanfile_dep = textwrap.dedent("""
 
 
 class TestBasicLocalFlows:
-
     @pytest.fixture
     def client(self):
         tc = TestClient(light=True)
@@ -56,7 +55,9 @@ class TestBasicLocalFlows:
         assert "finalized.txt" not in os.listdir(layout.package())
 
     def test_dependency_finalize_method(self, client):
-        client.save({"app/conanfile.py": textwrap.dedent("""
+        client.save(
+            {
+                "app/conanfile.py": textwrap.dedent("""
                  from conan import ConanFile
                  class TestConan(ConanFile):
                      name = "app"
@@ -66,7 +67,9 @@ class TestBasicLocalFlows:
                          self.output.info("Running generate method")
                          dep_pkg_folder = self.dependencies["dep"].package_folder
                          self.output.info(f"Dep package folder: {dep_pkg_folder}")
-                 """)})
+                 """)
+            }
+        )
         client.run("create dep")
         dep_layout = client.created_layout()
         client.run("create app")
@@ -75,21 +78,35 @@ class TestBasicLocalFlows:
 
     def test_no_non_info_access(self):
         client = TestClient(light=True)
-        client.save({"conanfile.py": GenConanfile("dep", "1.0")
-                     .with_finalize("self.output.info('settings.os: ' + self.settings.os)")})
+        client.save(
+            {
+                "conanfile.py": GenConanfile("dep", "1.0").with_finalize(
+                    "self.output.info('settings.os: ' + self.settings.os)"
+                )
+            }
+        )
         client.run("create .", assert_error=True)
-        assert "'self.settings' access in 'finalize()' method is forbidden" in client.out
+        assert (
+            "'self.settings' access in 'finalize()' method is forbidden" in client.out
+        )
 
     def test_finalize_moves_from_package(self):
         client = TestClient(light=True)
-        client.save({"conanfile.py": GenConanfile("dep", "1.0")
-                     .with_import("from conan.tools.files import save, rename",
-                                  "import os")
-                     .with_option("move", [True, False])
-                     .with_package('save(self, os.path.join(self.package_folder, "file.txt"), "Hello World!")',
-                                   "save(self, os.path.join(self.package_folder, 'file2.txt'), 'Hello World 2!')")
-                     # This is NOT allowed, moving from package to finalize is forbidden, only as test to ensure consistency
-                     .with_finalize("rename(self, os.path.join(self.immutable_package_folder, 'file.txt'), os.path.join(self.package_folder, 'file.txt')) if self.info.options.move else None")})
+        client.save(
+            {
+                "conanfile.py": GenConanfile("dep", "1.0")
+                .with_import("from conan.tools.files import save, rename", "import os")
+                .with_option("move", [True, False])
+                .with_package(
+                    'save(self, os.path.join(self.package_folder, "file.txt"), "Hello World!")',
+                    "save(self, os.path.join(self.package_folder, 'file2.txt'), 'Hello World 2!')",
+                )
+                # This is NOT allowed, moving from package to finalize is forbidden, only as test to ensure consistency
+                .with_finalize(
+                    "rename(self, os.path.join(self.immutable_package_folder, 'file.txt'), os.path.join(self.package_folder, 'file.txt')) if self.info.options.move else None"
+                )
+            }
+        )
         client.run("create . -o=dep/*:move=True")
         dep_moved_layout = client.created_layout()
         assert "file.txt" in os.listdir(dep_moved_layout.finalize())
@@ -101,10 +118,15 @@ class TestBasicLocalFlows:
         assert "file.txt" in os.listdir(dep_kept_layout.package())
 
         # Now we can check that the package_id is the same for both
-        assert dep_moved_layout.reference.package_id != dep_kept_layout.reference.package_id
+        assert (
+            dep_moved_layout.reference.package_id
+            != dep_kept_layout.reference.package_id
+        )
 
         # This now breaks if we try to cache check-integrity the moved package
-        client.run(f"cache check-integrity {dep_moved_layout.reference}", assert_error=True)
+        client.run(
+            f"cache check-integrity {dep_moved_layout.reference}", assert_error=True
+        )
         assert "There are corrupted artifacts" in client.out
 
         client.run(f"cache check-integrity {dep_kept_layout.reference}")
@@ -141,7 +163,9 @@ class TestBasicLocalFlows:
         client.run("cache save *:* -f=json", redirect_stdout="saved.json")
         saved = json.loads(client.load("saved.json"))
         pref = dep_layout.reference
-        saved_pkg_folder = saved["Local Cache"]["dep/1.0"]["revisions"][pref.ref.revision]["packages"][pref.package_id]["revisions"][pref.revision]["package_folder"]
+        saved_pkg_folder = saved["Local Cache"]["dep/1.0"]["revisions"][
+            pref.ref.revision
+        ]["packages"][pref.package_id]["revisions"][pref.revision]["package_folder"]
         assert saved_pkg_folder in dep_layout.package().replace("\\", "/")
         client.run("remove * -c")
         assert not os.path.exists(dep_layout.package())
@@ -164,10 +188,18 @@ class TestBasicLocalFlows:
     def test_graph_info_output(self, client):
         client.run("create dep")
         dep_layout = client.created_layout()
-        client.run("install --requires=dep/1.0 -f=json", redirect_stdout="finalize.json")
+        client.run(
+            "install --requires=dep/1.0 -f=json", redirect_stdout="finalize.json"
+        )
         finalize_output = json.loads(client.load("finalize.json"))
-        assert finalize_output["graph"]["nodes"]["1"]["package_folder"] == dep_layout.finalize()
-        assert finalize_output["graph"]["nodes"]["1"]["immutable_package_folder"] == dep_layout.package()
+        assert (
+            finalize_output["graph"]["nodes"]["1"]["package_folder"]
+            == dep_layout.finalize()
+        )
+        assert (
+            finalize_output["graph"]["nodes"]["1"]["immutable_package_folder"]
+            == dep_layout.package()
+        )
 
     def test_create_pkglist_output(self, client):
         client.run("create dep -f=json", redirect_stdout="created.json")
@@ -177,13 +209,19 @@ class TestBasicLocalFlows:
 
     def test_vendorized_basic(self, client):
         client.run("create dep")
-        client.save({"vendor/conanfile.py": GenConanfile("vendor", "1.0")
-                     .with_import("from conan.tools.files import copy")
-                     .with_class_attribute("vendor=True")
-                     .with_requires("dep/1.0")
-                     .with_package("copy(self, 'file.txt', src=self.dependencies['dep'].package_folder, dst=self.package_folder)",
-                                   "copy(self, 'finalized.txt', src=self.dependencies['dep'].package_folder, dst=self.package_folder)",
-                                   "copy(self, 'file2.txt', src=self.dependencies['dep'].immutable_package_folder, dst=self.package_folder)")})
+        client.save(
+            {
+                "vendor/conanfile.py": GenConanfile("vendor", "1.0")
+                .with_import("from conan.tools.files import copy")
+                .with_class_attribute("vendor=True")
+                .with_requires("dep/1.0")
+                .with_package(
+                    "copy(self, 'file.txt', src=self.dependencies['dep'].package_folder, dst=self.package_folder)",
+                    "copy(self, 'finalized.txt', src=self.dependencies['dep'].package_folder, dst=self.package_folder)",
+                    "copy(self, 'file2.txt', src=self.dependencies['dep'].immutable_package_folder, dst=self.package_folder)",
+                )
+            }
+        )
         client.run("create vendor")
         vendor_layout = client.created_layout()
         assert "file.txt" in os.listdir(vendor_layout.package())
@@ -208,13 +246,19 @@ class TestBasicLocalFlows:
     def test_access_immutable_from_consumer(self, client, with_finalize_method):
         if not with_finalize_method:
             client.save({"dep/conanfile.py": GenConanfile("dep", "1.0")})
-        client.save({"app/conanfile.py": GenConanfile("app", "1.0")
-                     .with_requires("dep/1.0")
-                     .with_package("dep = self.dependencies['dep/1.0']",
-                                   "self.output.info(f'Immutable package: {dep.immutable_package_folder}')",
-                                   # TODO: Think about if we want this interface
-                                   # "self.output.info(f'finalize: {dep.finalize_folder}')",
-                                   "self.output.info(f'Package: {dep.package_folder}')")})
+        client.save(
+            {
+                "app/conanfile.py": GenConanfile("app", "1.0")
+                .with_requires("dep/1.0")
+                .with_package(
+                    "dep = self.dependencies['dep/1.0']",
+                    "self.output.info(f'Immutable package: {dep.immutable_package_folder}')",
+                    # TODO: Think about if we want this interface
+                    # "self.output.info(f'finalize: {dep.finalize_folder}')",
+                    "self.output.info(f'Package: {dep.package_folder}')",
+                )
+            }
+        )
         client.run("create dep")
         dep_layout = client.created_layout()
         client.run("create app")
@@ -227,19 +271,24 @@ class TestBasicLocalFlows:
 
     def test_cache_modification_of_custom_conf_based_on_settings(self):
         tc = TestClient(light=True)
-        tc.save({"conanfile.py": GenConanfile("dep", "1.0")
-                .with_import("from conan.tools.files import save",
-                             "import os")
+        tc.save(
+            {
+                "conanfile.py": GenConanfile("dep", "1.0")
+                .with_import("from conan.tools.files import save", "import os")
                 .with_option("myoption", [True, False])
                 .with_option("otheroption", [True, False])
                 .with_default_option("myoption", False)
                 .with_default_option("otheroption", False)
                 .with_setting("os")
                 .with_package_id("del self.info.options.myoption")
-                .with_finalize("save(self, os.path.join(self.package_folder, 'file.txt'), 'Hello World!')",
-                              "save(self, os.path.join(self.package_folder, 'os.conf'), str(self.info.settings.os))",
-                              "save(self, os.path.join(self.package_folder, 'option.conf'), str(self.info.options.get_safe('myoption')))",
-                              "save(self, os.path.join(self.package_folder, 'otheroption.conf'), str(self.info.options.otheroption))")})
+                .with_finalize(
+                    "save(self, os.path.join(self.package_folder, 'file.txt'), 'Hello World!')",
+                    "save(self, os.path.join(self.package_folder, 'os.conf'), str(self.info.settings.os))",
+                    "save(self, os.path.join(self.package_folder, 'option.conf'), str(self.info.options.get_safe('myoption')))",
+                    "save(self, os.path.join(self.package_folder, 'otheroption.conf'), str(self.info.options.otheroption))",
+                )
+            }
+        )
         tc.run("create . -s=os=Linux -o=&:myoption=True -o=&:otheroption=True")
         layout = tc.created_layout()
         assert "file.txt" in os.listdir(layout.finalize())
@@ -252,7 +301,9 @@ class TestBasicLocalFlows:
 class TestToolRequiresFlows:
     def test_tool_requires(self):
         tc = TestClient(light=True)
-        tc.save({"dep/conanfile.py": textwrap.dedent("""
+        tc.save(
+            {
+                "dep/conanfile.py": textwrap.dedent("""
             import os
             from conan import ConanFile
             from conan.tools.files import save, copy
@@ -273,7 +324,8 @@ class TestToolRequiresFlows:
                     self.output.info(f"Running package_info method in {self.package_folder}")
                     self.cpp_info.bindirs = ["bin"]
 
-            """), "app/conanfile.py": textwrap.dedent("""
+            """),
+                "app/conanfile.py": textwrap.dedent("""
             from conan import ConanFile
             import os
 
@@ -289,7 +341,9 @@ class TestToolRequiresFlows:
                     bindir = self.dependencies.build['dep'].cpp_info.bindir
                     self.output.info(f"Dep bindir: {bindir}")
                     self.output.info(f"Is finalized? {os.path.exists(os.path.join(bindir, 'finalized.txt'))}")
-            """)})
+            """),
+            }
+        )
         tc.run("create dep --build-require")
         dep_layout = tc.created_layout()
         tc.run("create app")
@@ -299,19 +353,24 @@ class TestToolRequiresFlows:
 
     def test_test_package_uses_created_tool_which_modifies_pkgfolder(self):
         tc = TestClient(light=True)
-        tc.save({"conanfile.py": GenConanfile("app", "1.0")
+        tc.save(
+            {
+                "conanfile.py": GenConanfile("app", "1.0")
                 .with_import("from conan.tools.files import save")
                 .with_package_type("application")
                 .with_package("save(self, 'file.txt', 'Hello World!')")
                 .with_package_info({"bindirs": ["bin"]}, {})
                 .with_finalize("save(self, 'finalized.txt', 'finalized file')"),
-                 "test_package/conanfile.py": GenConanfile()
-                .with_import("from conan.tools.files import save",
-                             "import os")
+                "test_package/conanfile.py": GenConanfile()
+                .with_import("from conan.tools.files import save", "import os")
                 .with_test_reference_as_build_require()
-                .with_test("bindir = self.dependencies.build[self.tested_reference_str].cpp_info.bindir",
-                           "self.output.info(f'Bindir: {bindir}')",
-                           "save(self, os.path.join(bindir, '__pycache__.pyc'), 'Test file')")})
+                .with_test(
+                    "bindir = self.dependencies.build[self.tested_reference_str].cpp_info.bindir",
+                    "self.output.info(f'Bindir: {bindir}')",
+                    "save(self, os.path.join(bindir, '__pycache__.pyc'), 'Test file')",
+                ),
+            }
+        )
         tc.run("create . --build-require")
         app_layout = tc.created_layout()
         assert f"Bindir: {os.path.join(app_layout.finalize(), 'bin')}" in tc.out
@@ -320,7 +379,6 @@ class TestToolRequiresFlows:
 
 
 class TestRemoteFlows:
-
     @pytest.fixture
     def client(self):
         tc = TestClient(light=True, default_server_user=True)
@@ -334,7 +392,9 @@ class TestRemoteFlows:
         client.run("upload * -r=default -c")
 
         # Only the package folder is uploaded, not the finalize folder
-        uploaded_pref_path = client.servers["default"].test_server.server_store.package(created_pref)
+        uploaded_pref_path = client.servers["default"].test_server.server_store.package(
+            created_pref
+        )
         manifest_contents = load(os.path.join(uploaded_pref_path, "conanmanifest.txt"))
         assert "file.txt" in manifest_contents
         assert "finalized.txt" not in manifest_contents
@@ -353,17 +413,25 @@ class TestRemoteFlows:
         assert package_folder.endswith("p")
         # Now this finalize will run the finalize() method
         client.run("install --requires=dep/1.0")
-        assert f"Running finalize method in {downloaded_pref_layout.finalize()}" in client.out
+        assert (
+            f"Running finalize method in {downloaded_pref_layout.finalize()}"
+            in client.out
+        )
 
         client.run("remove * -c")
         client.run("install --requires=dep/1.0 -r=default")
         assert "dep/1.0: Calling finalize()"
-        assert f"Running finalize method in {downloaded_pref_layout.finalize()}" in client.out
+        assert (
+            f"Running finalize method in {downloaded_pref_layout.finalize()}"
+            in client.out
+        )
 
     def test_upload_verify_integrity(self, client):
         client.run("create dep")
         dep_layout = client.created_layout()
         client.run("upload * -r=default -c --check")
-        assert f"dep/1.0#{dep_layout.reference.ref.revision}:{dep_layout.reference.package_id}" \
-               f"#{dep_layout.reference.revision}: Integrity check: ok" in client.out
+        assert (
+            f"dep/1.0#{dep_layout.reference.ref.revision}:{dep_layout.reference.package_id}"
+            f"#{dep_layout.reference.revision}: Integrity check: ok" in client.out
+        )
         assert "There are corrupted artifacts" not in client.out

@@ -25,4 +25,4 @@ def test_basic_layout_subproject(basic_layout, expected_path):
     c.run("install pkg")
     ext = "sh" if platform.system() != "Windows" else "bat"
     assert os.path.isfile(os.path.join(c.current_folder, "pkg", expected_path, "conan",
-                                       "conanautotoolstoolchain.{}".format(ext)))
+                                       f"conanautotoolstoolchain.{ext}"))

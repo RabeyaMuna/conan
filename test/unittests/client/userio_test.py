@@ -1,11 +1,9 @@
-import pytest
 from unittest.mock import patch
 
 from conan.api.input import UserInput
 
 
 class TestUserInput:
-
     @patch("conan.api.input.UserInput.get_username", return_value="username")
     @patch("conan.api.input.UserInput.get_password", return_value="passwd")
     def test_request_login(self, m1, m2):

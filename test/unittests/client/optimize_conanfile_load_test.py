@@ -1,11 +1,9 @@
-
 from conan.test.utils.tools import TestClient
 
 
 class TestOptimizeConanFileLoad:
-
     def test_multiple_load(self):
-        """ when a conanfile is used more than once in a dependency graph, the python file
+        """when a conanfile is used more than once in a dependency graph, the python file
         should be read and interpreted just once, then instance 2 different ConanFile
         objects. The module global value "mycounter" is global to all instances, this
         should be discouraged to use as if it was an instance value.
@@ -27,16 +25,25 @@ class Pkg(ConanFile):
 
         client.run("create . --name=build --version=0.1 --user=user --channel=testing")
 
-        test_conanfile = conanfile + """
+        test_conanfile = (
+            conanfile
+            + """
     def requirements(self):
         self.requires(self.tested_reference_str)
 
     def test(self):
         pass
         """
-        client.save({"conanfile.py": conanfile,
-                     "test_package/conanfile.py": test_conanfile,
-                     "myprofile": "[tool_requires]\nbuild/0.1@user/testing"})
+        )
+        client.save(
+            {
+                "conanfile.py": conanfile,
+                "test_package/conanfile.py": test_conanfile,
+                "myprofile": "[tool_requires]\nbuild/0.1@user/testing",
+            }
+        )
 
-        client.run("create . --name=pkg --version=0.1 --user=user --channel=testing -pr=myprofile")
+        client.run(
+            "create . --name=pkg --version=0.1 --user=user --channel=testing -pr=myprofile"
+        )
         assert "build/0.1@user/testing: MyCounter1 2, MyCounter2 1" in client.out

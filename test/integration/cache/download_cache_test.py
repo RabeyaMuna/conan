@@ -9,10 +9,8 @@ from conan.internal.util.files import save, set_dirty
 
 
 class TestDownloadCache:
-
     def test_download_skip(self):
-        """ basic proof that enabling download_cache avoids downloading things again
-        """
+        """basic proof that enabling download_cache avoids downloading things again"""
         client = TestClient(default_server_user=True)
         # generate large random package file
         conanfile = textwrap.dedent("""
@@ -39,7 +37,10 @@ class TestDownloadCache:
         client.run("remove * -c")
         client.run("install --requires=mypkg/0.1@user/testing")
         assert "mypkg/0.1@user/testing: Downloading" not in client.out
-        assert "conan_package.tgz from download cache, instead of downloading it" in client.out
+        assert (
+            "conan_package.tgz from download cache, instead of downloading it"
+            in client.out
+        )
         # removing the config downloads things
         client.save_home({"global.conf": ""})
         client.run("remove * -c")
@@ -51,7 +52,10 @@ class TestDownloadCache:
         client.run("remove * -c")
         client.run("install --requires=mypkg/0.1@user/testing")
         assert "mypkg/0.1@user/testing: Downloading" not in client.out
-        assert "conan_package.tgz from download cache, instead of downloading it" in client.out
+        assert (
+            "conan_package.tgz from download cache, instead of downloading it"
+            in client.out
+        )
 
     def test_dirty_download(self):
         # https://github.com/conan-io/conan/issues/8578
@@ -59,7 +63,9 @@ class TestDownloadCache:
         tmp_folder = temp_folder()
         client.save_home({"global.conf": f"core.download:download_cache={tmp_folder}"})
 
-        client.save({"conanfile.py": GenConanfile().with_package_file("file.txt", "content")})
+        client.save(
+            {"conanfile.py": GenConanfile().with_package_file("file.txt", "content")}
+        )
         client.run("create . --name=pkg --version=0.1")
         client.run("upload * -c -r default")
         client.run("remove * -c")
@@ -94,13 +100,16 @@ class TestDownloadCache:
         tmp_folder = temp_folder()
         client.save_home({"global.conf": f"core.sources:download_cache={tmp_folder}"})
         # badchecksums are not cached
-        conanfile = textwrap.dedent("""
+        conanfile = textwrap.dedent(
+            """
            from conan import ConanFile
            from conan.tools.files import download
            class Pkg(ConanFile):
                def source(self):
                    download(self, "%s/myfile.txt", "myfile.txt", md5="kk")
-           """ % file_server.fake_url)
+           """
+            % file_server.fake_url
+        )
         client.save({"conanfile.py": conanfile})
         client.run("source .", assert_error=True)
         assert "ConanException: md5 signature failed for" in client.out
@@ -146,15 +155,16 @@ class TestDownloadCache:
         assert "Not found" in client.out
 
     def test_download_relative_error(self):
-        """ relative paths are not allowed
-        """
+        """relative paths are not allowed"""
         c = TestClient(default_server_user=True)
-        c.save({"conanfile.py": GenConanfile().with_package_file("file.txt", "content")})
+        c.save(
+            {"conanfile.py": GenConanfile().with_package_file("file.txt", "content")}
+        )
         c.run("create . --name=mypkg --version=0.1 --user=user --channel=testing")
         c.run("upload * --confirm -r default")
         c.run("remove * -c")
 
         # enable cache
-        c.save_home({"global.conf": f"core.download:download_cache=mytmp_folder"})
+        c.save_home({"global.conf": "core.download:download_cache=mytmp_folder"})
         c.run("install --requires=mypkg/0.1@user/testing", assert_error=True)
-        assert 'core.download:download_cache must be an absolute path' in c.out
+        assert "core.download:download_cache must be an absolute path" in c.out

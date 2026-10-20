@@ -51,7 +51,7 @@ class Pkg(ConanFile):
         client.save({"conanfile.py": conanfile})
         client.run("source .")
         assert "Test1" in client.stderr
-        assert "Test2" in client.stderr
+        assert "Test2" in client.stdout
         assert "" == client.stdout
 
     def test_conanfile_new_print_save(self):

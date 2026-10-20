@@ -6,7 +6,6 @@ from conans.server.revision_list import RevisionList
 
 
 class TestRevisionList:
-
     def test_remove_latest(self):
         rev = RevisionList()
         rev.add_revision("rev1")
@@ -32,8 +31,10 @@ class TestRevisionList:
 
     def test_compatibility_with_timestamps(self):
         the_time = floor(time.time())
-        old_contents = '{"revisions": [{"revision": "rev1", "time": %s}, ' \
-                       '{"revision": "rev2", "time": %s}]}' % (the_time, the_time)
+        old_contents = (
+            '{"revisions": [{"revision": "rev1", "time": %s}, '
+            '{"revision": "rev2", "time": %s}]}' % (the_time, the_time)
+        )
         r_list = RevisionList.loads(old_contents)
         when = r_list.get_time("rev1")
         assert when == the_time

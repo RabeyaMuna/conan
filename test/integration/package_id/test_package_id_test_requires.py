@@ -11,8 +11,14 @@ def test_package_id_not_affected_test_requires(build_mode):
     c = TestClient()
     if build_mode is not None:
         c.save_home({"global.conf": f"core.package_id:default_build_mode={build_mode}"})
-    c.save({"gtest/conanfile.py": GenConanfile("gtest", "1.0"),
-            "engine/conanfile.py": GenConanfile("engine", "1.0").with_test_requires("gtest/1.0")})
+    c.save(
+        {
+            "gtest/conanfile.py": GenConanfile("gtest", "1.0"),
+            "engine/conanfile.py": GenConanfile("engine", "1.0").with_test_requires(
+                "gtest/1.0"
+            ),
+        }
+    )
     c.run("create gtest")
     c.run("create engine")
     c.run("list engine:*")
@@ -26,9 +32,17 @@ def test_package_id_not_affected_test_requires_transitive():
     """
     c = TestClient()
 
-    c.save({"zlib/conanfile.py": GenConanfile("zlib", "1.0"),
-            "gtest/conanfile.py": GenConanfile("gtest", "1.0").with_requires("zlib/1.0"),
-            "engine/conanfile.py": GenConanfile("engine", "1.0").with_test_requires("gtest/1.0")})
+    c.save(
+        {
+            "zlib/conanfile.py": GenConanfile("zlib", "1.0"),
+            "gtest/conanfile.py": GenConanfile("gtest", "1.0").with_requires(
+                "zlib/1.0"
+            ),
+            "engine/conanfile.py": GenConanfile("engine", "1.0").with_test_requires(
+                "gtest/1.0"
+            ),
+        }
+    )
     c.run("create zlib")
     c.run("create gtest")
     c.run("create engine")

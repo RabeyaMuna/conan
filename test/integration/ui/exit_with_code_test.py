@@ -19,8 +19,8 @@ def test_exit_with_code():
     client = TestClient(light=True)
     client.save({"conanfile.py": base})
     client.run("install .")
-    error_code = client.run("build .", assert_error=True)
-    assert error_code == 34
+    client.run("build .", assert_error=True)
+    assert client.last_command_status == 34
     assert "Exiting with code: 34" in client.out
 
 

@@ -39,7 +39,7 @@ base_emscripten_profile = textwrap.dedent(
     NM=emnm
     RANLIB=emranlib
     STRIP=emstrip
-"""
+    """
 )
 
 wasm32_profile = textwrap.dedent(

@@ -400,7 +400,7 @@ def test_thread_flags(threads, flags):
     if os == "Windows":
         assert f'set "CXXFLAGS=%CXXFLAGS% -stdlib=libc++ {flags}"' in toolchain
         assert f'set "CFLAGS=%CFLAGS% {flags}"' in toolchain
-        assert f'set "LDFLAGS=%LDFLAGS% {flags}' in toolchain
+        assert f'set "LDFLAGS=%LDFLAGS% {flags}"' in toolchain
     else:
         assert f'export CXXFLAGS="$CXXFLAGS -stdlib=libc++ {flags}"' in toolchain
         assert f'export CFLAGS="$CFLAGS {flags}"' in toolchain

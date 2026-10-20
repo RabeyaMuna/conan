@@ -78,7 +78,7 @@ def test_inject_vars():
 
             def generate(self):
                 content = 'call envars_generator.sh'
-                name = f"conantest.sh"
+                name = "conantest.sh"
                 create_env_script(self.conanfile, content, name)
                 register_env_script(self.conanfile, "tool/envars_generator2.sh")
 
@@ -91,7 +91,7 @@ def test_inject_vars():
         """)})
 
     tc.run("create tool")
-    tc.run(f"install --tool-requires=tool/0.1")
+    tc.run("install --tool-requires=tool/0.1")
 
     content = tc.load("conanbuild.sh")
     assert "conantest.sh" in content

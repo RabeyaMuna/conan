@@ -10,7 +10,6 @@ from conan.internal.util.files import load, save
 
 
 class TestConanfileTools:
-
     def test_save_append(self):
         # https://github.com/conan-io/conan/issues/2841 (regression)
         client = TestClient()
@@ -20,8 +19,7 @@ class Pkg(ConanFile):
     def source(self):
         save(self, "myfile.txt", "Hello", append=True)
 """
-        client.save({"conanfile.py": conanfile,
-                     "myfile.txt": "World"})
+        client.save({"conanfile.py": conanfile, "myfile.txt": "World"})
         client.run("source .")
         assert "WorldHello" == client.load("myfile.txt")
 
@@ -34,6 +32,7 @@ class Pkg(ConanFile):
             old_path = os.getcwd()
             os.chdir(tmp_dir)
             import tarfile
+
             tar = tarfile.open(tar_path, "w")
             tar.add("example.txt")
             tar.close()
@@ -59,11 +58,15 @@ class Pkg(ConanFile):
         text_file = os.path.join(tmp_dir, "text.txt")
         save(text_file, "ONE TWO THREE")
 
-        os.chmod(text_file,
-                 os.stat(text_file).st_mode & ~(stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH))
+        os.chmod(
+            text_file,
+            os.stat(text_file).st_mode & ~(stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH),
+        )
 
         try:
-            replace_in_file(ConanFileMock(), text_file, "ONE TWO THREE", "FOUR FIVE SIX")
+            replace_in_file(
+                ConanFileMock(), text_file, "ONE TWO THREE", "FOUR FIVE SIX"
+            )
             assert False, "Expected PermissionError"
         except PermissionError:
             pass
