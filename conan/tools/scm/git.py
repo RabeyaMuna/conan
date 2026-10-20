@@ -13,6 +13,7 @@ class Git:
     """
     Git is a wrapper for several common patterns used with *git* tool.
     """
+
     def __init__(self, conanfile, folder=".", excluded=None):
         """
         :param conanfile: Conanfile instance.
@@ -34,7 +35,9 @@ class Git:
                 self._excluded = c.get("core.scm:excluded", check_type=list)
             else:
                 self._excluded = conf_excluded
-        self._local_url = global_conf.get("core.scm:local_url", choices=["allow", "block"])
+        self._local_url = global_conf.get(
+            "core.scm:local_url", choices=["allow", "block"]
+        )
 
     def run(self, cmd, hidden_output=None):
         """
@@ -42,7 +45,9 @@ class Git:
 
         :return: The console output of the command.
         """
-        print_cmd = cmd if hidden_output is None else cmd.replace(hidden_output, "<hidden>")
+        print_cmd = (
+            cmd if hidden_output is None else cmd.replace(hidden_output, "<hidden>")
+        )
         self._conanfile.output.info(f"RUN: git {print_cmd}", fg=Color.BRIGHT_BLUE)
         with chdir(self._conanfile, self.folder):
             # We tried to use self.conanfile.run(), but it didn't work:
@@ -63,11 +68,13 @@ class Git:
             # --full-history is needed to not avoid wrong commits:
             # https://github.com/conan-io/conan/issues/10971
             # https://git-scm.com/docs/git-rev-list#Documentation/git-rev-list.txt-Defaultmode
-            path = '' if repository else '-- "."'
-            commit = self.run(f'rev-list HEAD -n 1 --full-history {path}')
+            path = "" if repository else '-- "."'
+            commit = self.run(f"rev-list HEAD -n 1 --full-history {path}")
             return commit
         except Exception as e:
-            raise ConanException("Unable to get git commit in '%s': %s" % (self.folder, str(e)))
+            raise ConanException(
+                "Unable to get git commit in '%s': %s" % (self.folder, str(e))
+            )
 
     def get_remote_url(self, remote="origin"):
         """
@@ -110,7 +117,9 @@ class Git:
             if "{}/".format(remote) in branches:
                 return True
         except Exception as e:
-            raise ConanException("Unable to check remote commit in '%s': %s" % (self.folder, str(e)))
+            raise ConanException(
+                "Unable to check remote commit in '%s': %s" % (self.folder, str(e))
+            )
 
         try:
             # This will raise if commit not present.
@@ -130,8 +139,10 @@ class Git:
                      it will check the root repository folder instead, not the current one.
         :return: True, if the current folder is dirty. Otherwise, False.
         """
-        path = '' if repository else '.'
-        status = self.run(f"status {path} --short --no-branch --untracked-files").strip()
+        path = "" if repository else "."
+        status = self.run(
+            f"status {path} --short --no-branch --untracked-files"
+        ).strip()
         self._conanfile.output.debug(f"Git status:\n{status}")
         if not self._excluded:
             return bool(status)
@@ -140,7 +151,11 @@ class Git:
         # line is of the form STATUS PATH, get the path by splitting
         # (Taking into account that STATUS is one word, PATH might be many)
         lines = [line.split(maxsplit=1)[1].strip('"') for line in lines if line]
-        lines = [line for line in lines if not any(fnmatch.fnmatch(line, p) for p in self._excluded)]
+        lines = [
+            line
+            for line in lines
+            if not any(fnmatch.fnmatch(line, p) for p in self._excluded)
+        ]
         self._conanfile.output.debug(f"Filtered git status: {lines}")
         return bool(lines)
 
@@ -175,21 +190,28 @@ class Git:
         """
         dirty = self.is_dirty(repository=repository)
         if dirty:
-            raise ConanException("Repo is dirty, cannot capture url and commit: "
-                                 "{}".format(self.folder))
+            raise ConanException(
+                "Repo is dirty, cannot capture url and commit: " "{}".format(
+                    self.folder
+                )
+            )
         commit = self.get_commit(repository=repository)
         url = self.get_remote_url(remote=remote)
         in_remote = self.commit_in_remote(commit, remote=remote)
         if in_remote:
             return url, commit
         if self._local_url == "block":
-            raise ConanException(f"Current commit {commit} doesn't exist in remote {remote}\n"
-                                 "Failing according to 'core.scm:local_url=block' conf")
+            raise ConanException(
+                f"Current commit {commit} doesn't exist in remote {remote}\n"
+                "Failing according to 'core.scm:local_url=block' conf"
+            )
 
         if self._local_url != "allow":
-            self._conanfile.output.warning("Current commit {} doesn't exist in remote {}\n"
-                                           "This revision will not be buildable in other "
-                                           "computer".format(commit, remote))
+            self._conanfile.output.warning(
+                "Current commit {} doesn't exist in remote {}\n"
+                "This revision will not be buildable in other "
+                "computer".format(commit, remote)
+            )
         return self.get_repo_root(), commit
 
     def get_repo_root(self):
@@ -216,10 +238,14 @@ class Git:
             url = url.replace("\\", "/")  # Windows local directory
         mkdir(self.folder)
         self._conanfile.output.info("Cloning git repo")
-        target_path = f'"{target}"' if target else ""  # quote in case there are spaces in path
+        target_path = (
+            f'"{target}"' if target else ""
+        )  # quote in case there are spaces in path
         # Avoid printing the clone command, it can contain tokens
-        self.run('clone "{}" {} {}'.format(url, " ".join(args), target_path),
-                 hidden_output=url if hide_url else None)
+        self.run(
+            'clone "{}" {} {}'.format(url, " ".join(args), target_path),
+            hidden_output=url if hide_url else None,
+        )
 
     def fetch_commit(self, url, commit, hide_url=True):
         """
@@ -235,10 +261,10 @@ class Git:
             url = url.replace("\\", "/")  # Windows local directory
         mkdir(self.folder)
         self._conanfile.output.info("Shallow fetch of git repo")
-        self.run('init')
+        self.run("init")
         self.run(f'remote add origin "{url}"', hidden_output=url if hide_url else None)
-        self.run(f'fetch --depth 1 origin {commit}')
-        self.run('checkout FETCH_HEAD')
+        self.run(f"fetch --depth 1 origin {commit}")
+        self.run("checkout FETCH_HEAD")
 
     def checkout(self, commit):
         """
@@ -247,7 +273,7 @@ class Git:
         :param commit: Commit to checkout.
         """
         self._conanfile.output.info("Checkout: {}".format(commit))
-        self.run('checkout {}'.format(commit))
+        self.run("checkout {}".format(commit))
 
     def included_files(self):
         """
@@ -272,7 +298,9 @@ class Git:
                      the commit of the repository instead.
         """
         scm_url, scm_commit = self.get_url_and_commit(repository=repository)
-        update_conandata(self._conanfile, {"scm": {"commit": scm_commit, "url": scm_url}})
+        update_conandata(
+            self._conanfile, {"scm": {"commit": scm_commit, "url": scm_url}}
+        )
 
     def checkout_from_conandata_coordinates(self):
         """

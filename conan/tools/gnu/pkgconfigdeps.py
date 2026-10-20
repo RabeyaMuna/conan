@@ -12,7 +12,7 @@ from conan.internal.util.files import save
 
 class _PCFilesDeps:
 
-    template = textwrap.dedent("""\
+    template = textwrap.dedent("""
         {% for k, v in pc_variables.items() %}
         {{ "{}={}".format(k, v) }}
         {% endfor %}

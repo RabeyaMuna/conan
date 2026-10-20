@@ -280,7 +280,7 @@ def test_config_package_append(client):
         include(profile1)
         [conf]
         mypkg*:user.myteam:myconf+=["d"]
-        mydep*:user.myteam:myconf=+["e"]
+        mydep*:user.myteam:myconf+=["e"]
         """)
     conanfile = textwrap.dedent("""
         from conan import ConanFile

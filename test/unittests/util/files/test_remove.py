@@ -9,9 +9,8 @@ from conan.internal.util.files import remove, save
 
 
 class RemoveTest(unittest.TestCase):
-
     def setUp(self):
-        self.file = os.path.join(temp_folder(), 'file.txt')
+        self.file = os.path.join(temp_folder(), "file.txt")
         save(self.file, "some content")
 
     def test_remove(self):
@@ -20,7 +19,7 @@ class RemoveTest(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.dirname(self.file)))
 
     def test_remove_readonly(self):
-        os.chmod(self.file, stat.S_IREAD|stat.S_IRGRP|stat.S_IROTH)
+        os.chmod(self.file, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
         with self.assertRaisesRegex((IOError, OSError), "Permission denied"):
             save(self.file, "change the content")
         remove(self.file)
@@ -31,4 +30,3 @@ class RemoveTest(unittest.TestCase):
         dirname = os.path.dirname(self.file)
         self.assertRaises(AssertionError, remove, dirname)
         self.assertTrue(os.path.exists(dirname))
-

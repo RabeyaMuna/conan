@@ -69,7 +69,7 @@ def test_not_mixed_configurations():
     client.run("new cmake_lib -d name=foo  -d version=1.0")
 
     conanfile = client.load("conanfile.py")
-    conanfile.replace("package_info(self)", "invalid(self)")
+    conanfile = conanfile.replace("package_info(self)", "invalid(self)")
     conanfile += """
     def package_info(self):
         self.cpp_info.libs = ["foo" if self.settings.build_type == "Release" else "foo_d"]

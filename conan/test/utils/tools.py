@@ -41,7 +41,7 @@ from conan.test.utils.artifactory import ArtifactoryServer
 from conan.test.utils.mocks import RedirectedInputStream
 from conan.test.utils.mocks import RedirectedTestOutput
 from conan.test.utils.scm import create_local_git_repo
-from conan.test.utils.server_launcher import (TestServerLauncher)
+from conan.test.utils.server_launcher import TestServerLauncher
 from conan.test.utils.test_files import temp_folder
 from conan.internal.util.files import mkdir, save_files, save, load
 
@@ -76,7 +76,7 @@ default_profiles = {
         compiler.version=15
         compiler.libcxx=libc++
         build_type=Release
-        """)
+        """),
 }
 
 
@@ -103,12 +103,12 @@ class TestingResponse(object):
 
     def raise_for_status(self):
         """Raises stored :class:`HTTPError`, if one occurred."""
-        http_error_msg = ''
+        http_error_msg = ""
         if 400 <= self.status_code < 500:
-            http_error_msg = u'%s Client Error: %s' % (self.status_code, self.content)
+            http_error_msg = "%s Client Error: %s" % (self.status_code, self.content)
 
         elif 500 <= self.status_code < 600:
-            http_error_msg = u'%s Server Error: %s' % (self.status_code, self.content)
+            http_error_msg = "%s Server Error: %s" % (self.status_code, self.content)
 
         if http_error_msg:
             raise HTTPError(http_error_msg, response=self)
@@ -207,7 +207,9 @@ class TestRequester:
             requests.post(url, **kwargs)
 
     def _prepare_call(self, url, kwargs):
-        if not url.startswith("http://fake"):  # Call to S3 (or external), perform a real request
+        if not url.startswith(
+            "http://fake"
+        ):  # Call to S3 (or external), perform a real request
             return None, url
         app = self._get_wsgi_app(url)
         url = self._get_url_path(url)  # Remove http://server.com
@@ -240,7 +242,9 @@ class TestRequester:
     @staticmethod
     def _set_auth_headers(kwargs):
         if kwargs.get("auth"):
-            if isinstance(kwargs.get("auth"), tuple):  # For download(..., auth=(user, paswd))
+            if isinstance(
+                kwargs.get("auth"), tuple
+            ):  # For download(..., auth=(user, paswd))
                 return
             mock_request = Mock()
             mock_request.headers = {}
@@ -263,14 +267,21 @@ class TestRequester:
 class TestServer:
     __test__ = False
 
-    def __init__(self, read_permissions=None,
-                 write_permissions=None, users=None, plugins=None, base_path=None,
-                 server_capabilities=None, complete_urls=False):
+    def __init__(
+        self,
+        read_permissions=None,
+        write_permissions=None,
+        users=None,
+        plugins=None,
+        base_path=None,
+        server_capabilities=None,
+        complete_urls=False,
+    ):
         """
-             'read_permissions' and 'write_permissions' is a list of:
-                 [("opencv/2.3.4@lasote/testing", "user1, user2")]
+        'read_permissions' and 'write_permissions' is a list of:
+            [("opencv/2.3.4@lasote/testing", "user1, user2")]
 
-             'users':  {username: plain-text-passwd}
+        'users':  {username: plain-text-passwd}
         """
         # Unique identifier for this server, will be used by TestRequester
         # to determine where to call. Why? remote_manager just assing an url
@@ -290,11 +301,15 @@ class TestServer:
 
         self.fake_url = "http://fake%s.com" % str(uuid.uuid4()).replace("-", "")
         base_url = "%s/v1" % self.fake_url if complete_urls else "v1"
-        self.test_server = TestServerLauncher(base_path, read_permissions,
-                                              write_permissions, users,
-                                              base_url=base_url,
-                                              plugins=plugins,
-                                              server_capabilities=server_capabilities)
+        self.test_server = TestServerLauncher(
+            base_path,
+            read_permissions,
+            write_permissions,
+            users,
+            base_url=base_url,
+            plugins=plugins,
+            server_capabilities=server_capabilities,
+        )
         self.app = TestApp(self.test_server.ra.root_app)
 
     @property
@@ -382,15 +397,25 @@ def redirect_input(target):
 
 
 class TestClient:
-    """ Test wrap of the conans application to launch tests in the same way as
+    """Test wrap of the conans application to launch tests in the same way as
     in command line
     """
+
     # Preventing Pytest collects any tests from here
     __test__ = False
 
-    def __init__(self, cache_folder=None, current_folder=None, servers=None, inputs=None,
-                 requester_class=None, path_with_spaces=True,
-                 default_server_user=None, light=False, custom_commands_folder=None):
+    def __init__(
+        self,
+        cache_folder=None,
+        current_folder=None,
+        servers=None,
+        inputs=None,
+        requester_class=None,
+        path_with_spaces=True,
+        default_server_user=None,
+        light=False,
+        custom_commands_folder=None,
+    ):
         """
         current_folder: Current execution folder
         servers: dict of {remote_name: TestServer}
@@ -398,10 +423,13 @@ class TestClient:
         if required==> [("lasote", "mypass"), ("other", "otherpass")]
         """
         if default_server_user is not None:
-            assert isinstance(default_server_user, bool), \
-                "default_server_user has to be True or False"
+            assert isinstance(
+                default_server_user, bool
+            ), "default_server_user has to be True or False"
             if servers is not None:
-                raise Exception("Cannot define both 'servers' and 'default_server_user'")
+                raise Exception(
+                    "Cannot define both 'servers' and 'default_server_user'"
+                )
             if inputs is not None:
                 raise Exception("Cannot define both 'inputs' and 'default_server_user'")
 
@@ -409,11 +437,15 @@ class TestClient:
             inputs = ["admin", "password"]
 
             # Allow writing permissions to users
-            server = TestServer(users=server_users, write_permissions=[("*/*@*/*", "*")])
+            server = TestServer(
+                users=server_users, write_permissions=[("*/*@*/*", "*")]
+            )
             servers = {"default": server}
 
         # Adding the .conan2, so we know clearly while debugging this is a cache folder
-        self.cache_folder = cache_folder or os.path.join(temp_folder(path_with_spaces), ".conan2")
+        self.cache_folder = cache_folder or os.path.join(
+            temp_folder(path_with_spaces), ".conan2"
+        )
 
         self.requester_class = requester_class
         self.servers = servers or {}
@@ -480,12 +512,11 @@ class TestClient:
                 remotes.append(Remote(name, server))
         _save(HomePaths(self.cache_folder).remotes_path, remotes)
 
-
     def update_providers(self):
         default_providers = {
             CONAN_CENTER_AUDIT_PROVIDER_NAME: {
                 "url": "https://fakeurl/",
-                "type": "conan-center-proxy"
+                "type": "conan-center-proxy",
             }
         }
         _save_providers(HomePaths(self.cache_folder).providers_path, default_providers)
@@ -531,8 +562,9 @@ class TestClient:
             self.api = ConanAPI(cache_folder=self.cache_folder)
             command = Cli(self.api)
             if self._custom_commands_folder:
-                with environment_update({_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH:
-                                         self._custom_commands_folder}):
+                with environment_update(
+                    {_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH: self._custom_commands_folder}
+                ):
                     command.run(args)
             else:
                 command.run(args)
@@ -546,23 +578,37 @@ class TestClient:
             added_modules = set(sys.modules).difference(old_modules)
             for added in added_modules:
                 sys.modules.pop(added, None)
-        self._handle_cli_result(command_line, assert_error=assert_error, error=error, trace=trace)
+        self._handle_cli_result(
+            command_line, assert_error=assert_error, error=error, trace=trace
+        )
         return error
 
-    def run(self, command_line, assert_error=False, redirect_stdout=None, redirect_stderr=None, inputs=None):
-        """ run a single command as in the command line.
-            If user or password is filled, user_io will be mocked to return this
-            tuple if required
+    def run(
+        self,
+        command_line,
+        assert_error=False,
+        redirect_stdout=None,
+        redirect_stderr=None,
+        inputs=None,
+    ):
+        """run a single command as in the command line.
+        If user or password is filled, user_io will be mocked to return this
+        tuple if required
         """
         from conan.test.utils.mocks import RedirectedTestOutput
-        with environment_update({"NO_COLOR": "1"}):  # Not initialize colorama in testing
+
+        with environment_update(
+            {"NO_COLOR": "1"}
+        ):  # Not initialize colorama in testing
             self.user_inputs = RedirectedInputStream(inputs or self.inputs)
             self.stdout = RedirectedTestOutput()  # Initialize each command
             self.stderr = RedirectedTestOutput()
             self.out = ""
             with self.mocked_io():
-                real_servers = any(isinstance(s, (str, ArtifactoryServer))
-                                   for s in self.servers.values())
+                real_servers = any(
+                    isinstance(s, (str, ArtifactoryServer))
+                    for s in self.servers.values()
+                )
                 http_requester = None
                 if not real_servers:
                     if self.requester_class:
@@ -573,7 +619,9 @@ class TestClient:
                 try:
                     if http_requester:
                         with self.mocked_servers(http_requester):
-                            return self._run_cli(command_line, assert_error=assert_error)
+                            return self._run_cli(
+                                command_line, assert_error=assert_error
+                            )
                     else:
                         return self._run_cli(command_line, assert_error=assert_error)
                 finally:
@@ -581,17 +629,25 @@ class TestClient:
                     self.stderr = str(self.stderr)
                     self.out = self.stderr + self.stdout
                     if redirect_stdout:
-                        save(os.path.join(self.current_folder, redirect_stdout), self.stdout)
+                        save(
+                            os.path.join(self.current_folder, redirect_stdout),
+                            self.stdout,
+                        )
                     if redirect_stderr:
-                        save(os.path.join(self.current_folder, redirect_stderr), self.stderr)
+                        save(
+                            os.path.join(self.current_folder, redirect_stderr),
+                            self.stderr,
+                        )
 
     def run_command(self, command, cwd=None, assert_error=False):
         from conan.test.utils.mocks import RedirectedTestOutput
+
         self.stdout = RedirectedTestOutput()  # Initialize each command
         self.stderr = RedirectedTestOutput()
         try:
             with redirect_output(self.stderr, self.stdout):
                 from conan.internal.util.runners import conan_run
+
                 ret = conan_run(command, cwd=cwd or self.current_folder)
         finally:
             self.stdout = str(self.stdout)
@@ -617,7 +673,7 @@ class TestClient:
             pytest.fail(exc_message, pytrace=False)
 
     def save(self, files, path=None, clean_first=False):
-        """ helper metod, will store files in the current folder
+        """helper metod, will store files in the current folder
         param files: dict{filename: filecontents}
         """
         path = path or self.current_folder
@@ -636,12 +692,13 @@ class TestClient:
         self.run("remove '*' -c")
 
     def export(self, ref, conanfile=GenConanfile(), args=None):
-        """ export a ConanFile with as "ref" and return the reference with recipe revision
-        """
+        """export a ConanFile with as "ref" and return the reference with recipe revision"""
         if conanfile:
             self.save({"conanfile.py": conanfile})
         if ref:
-            self.run(f"export . --name={ref.name} --version={ref.version} --user={ref.user} --channel={ref.channel}")
+            self.run(
+                f"export . --name={ref.name} --version={ref.version} --user={ref.user} --channel={ref.channel}"
+            )
         else:
             self.run("export .")
         tmp = copy.copy(ref)
@@ -659,21 +716,36 @@ class TestClient:
         """
         source = RecipeReference.loads(source)
         target = target.split("/", 1)[1]
-        self.run(f"new alias -d name={source.name} -d version={source.version} "
-                 f"-d target={target} -f")
+        self.run(
+            f"new alias -d name={source.name} -d version={source.version} "
+            f"-d target={target} -f"
+        )
         user = f"--user={source.user}" if source.user else ""
         channel = f"--channel={source.channel}" if source.channel else ""
         self.run(f"export . {user} {channel}")
         os.remove(os.path.join(self.current_folder, "conanfile.py"))
 
-    def init_git_repo(self, files=None, branch=None, submodules=None, folder=None, origin_url=None,
-                      main_branch="master"):
+    def init_git_repo(
+        self,
+        files=None,
+        branch=None,
+        submodules=None,
+        folder=None,
+        origin_url=None,
+        main_branch="master",
+    ):
         if folder is not None:
             folder = os.path.join(self.current_folder, folder)
         else:
             folder = self.current_folder
-        _, commit = create_local_git_repo(files, branch, submodules, folder=folder,
-                                          origin_url=origin_url, main_branch=main_branch)
+        _, commit = create_local_git_repo(
+            files,
+            branch,
+            submodules,
+            folder=folder,
+            origin_url=origin_url,
+            main_branch=main_branch,
+        )
         return commit
 
     def get_latest_package_reference(self, ref, package_id=None) -> PkgReference:
@@ -685,9 +757,12 @@ class TestClient:
         else:
             package_ids = self.cache.get_package_references(latest_rrev)
             # Let's check if there are several packages because we don't want random behaviours
-            assert len(package_ids) == 1, f"There are several packages for {latest_rrev}, please, " \
-                                          f"provide a single package_id instead" \
-                                          if len(package_ids) > 0 else "No binary packages found"
+            assert len(package_ids) == 1, (
+                f"There are several packages for {latest_rrev}, please, "
+                f"provide a single package_id instead"
+                if len(package_ids) > 0
+                else "No binary packages found"
+            )
             pref = package_ids[0]
         return self.cache.get_latest_package_reference(pref)
 
@@ -721,10 +796,10 @@ class TestClient:
         prev = self.cache.get_package_revisions_references(pref)
         return True if prev else False
 
-    def assert_listed_require(self, requires, build=False, python=False, test=False,
-                              test_package=False):
-        """ parses the current command output, and extract the first "Requirements" section
-        """
+    def assert_listed_require(
+        self, requires, build=False, python=False, test=False, test_package=False
+    ):
+        """parses the current command output, and extract the first "Requirements" section"""
         lines = self.out.splitlines()
         if test_package:
             line_req = lines.index("======== Launching test_package ========")
@@ -736,7 +811,7 @@ class TestClient:
             header = "Test requirements"
         line_req = lines.index(header)
         reqs = []
-        for line in lines[line_req+1:]:
+        for line in lines[line_req + 1 :]:
             if not line.startswith("    "):
                 break
             reqs.append(line.strip())
@@ -748,13 +823,12 @@ class TestClient:
                 raise AssertionError(f"Cant find {r}-{kind} in {reqs}")
 
     def assert_overrides(self, overrides):
-        """ parses the current command output, and extract the first "Requirements" section
-        """
+        """parses the current command output, and extract the first "Requirements" section"""
         lines = self.out.splitlines()
         header = "Overrides"
         line_req = lines.index(header)
         reqs = []
-        for line in lines[line_req+1:]:
+        for line in lines[line_req + 1 :]:
             if not line.startswith("    "):
                 break
             reqs.append(line.strip())
@@ -763,8 +837,10 @@ class TestClient:
             if msg not in reqs:
                 raise AssertionError(f"Cant find {msg} in {reqs}")
 
-    def assert_listed_binary(self, requires, build=False, test=False, test_package=False):
-        """ parses the current command output, and extract the second "Requirements" section
+    def assert_listed_binary(
+        self, requires, build=False, test=False, test_package=False
+    ):
+        """parses the current command output, and extract the second "Requirements" section
         belonging to the computed package binaries
         """
         lines = self.out.splitlines()
@@ -778,7 +854,7 @@ class TestClient:
         line_req = lines.index(header, line_req)
 
         reqs = []
-        for line in lines[line_req+1:]:
+        for line in lines[line_req + 1 :]:
             if not line.startswith("    "):
                 break
             reqs.append(line.strip())
@@ -791,23 +867,28 @@ class TestClient:
                 raise AssertionError(f"Cant find {r}-{kind} in {reqs}")
 
     def created_test_build_folder(self, ref):
-        build_folder = re.search(r"{} \(test package\): Test package build: (.*)".format(str(ref)),
-                                 str(self.out)).group(1)
+        build_folder = re.search(
+            r"{} \(test package\): Test package build: (.*)".format(str(ref)),
+            str(self.out),
+        ).group(1)
         return build_folder.replace("\\", "/")
 
     def created_package_id(self, ref):
-        package_id = re.search(r"{}: Package '(\S+)' created".format(str(ref)),
-                               str(self.out)).group(1)
+        package_id = re.search(
+            r"{}: Package '(\S+)' created".format(str(ref)), str(self.out)
+        ).group(1)
         return package_id
 
     def created_package_revision(self, ref):
-        package_id = re.search(r"{}: Created package revision (\S+)".format(str(ref)),
-                               str(self.out)).group(1)
+        package_id = re.search(
+            r"{}: Created package revision (\S+)".format(str(ref)), str(self.out)
+        ).group(1)
         return package_id
 
     def created_package_reference(self, ref):
-        pref = re.search(r"{}: Full package reference: (\S+)".format(str(ref)),
-                               str(self.out)).group(1)
+        pref = re.search(
+            r"{}: Full package reference: (\S+)".format(str(ref)), str(self.out)
+        ).group(1)
         return PkgReference.loads(pref)
 
     def exported_recipe_revision(self):
@@ -819,21 +900,23 @@ class TestClient:
         return self.cache.recipe_layout(ref)
 
     def created_layout(self):
-        pref = re.search(r"(?s:.*)Full package reference: (\S+)", str(self.out)).group(1)
+        pref = re.search(r"(?s:.*)Full package reference: (\S+)", str(self.out)).group(
+            1
+        )
         pref = PkgReference.loads(pref)
         return self.cache.pkg_layout(pref)
 
 
 def get_free_port():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('localhost', 0))
+    sock.bind(("localhost", 0))
     ret = sock.getsockname()[1]
     sock.close()
     return ret
 
 
 def zipdir(path, zipfilename):
-    with zipfile.ZipFile(zipfilename, 'w', zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(zipfilename, "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(path):
             for f in files:
                 file_path = os.path.join(root, f)

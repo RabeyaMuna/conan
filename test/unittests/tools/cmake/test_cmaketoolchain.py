@@ -667,7 +667,7 @@ def test_linker_scripts_block(conanfile):
                           ["path_to_first_linker_script", "path_to_second_linker_script"])
     toolchain = CMakeToolchain(conanfile)
     content = toolchain.content
-    assert r'string(APPEND CONAN_EXE_LINKER_FLAGS " -T\"path_to_first_linker_script\" ' \
+    assert r'string(APPEND CONAN_EXE_LINKER_FLAGS " -T\"path_to_first_linker_script\" ' + \
            r'-T\"path_to_second_linker_script\"")' in content
 
 

@@ -36,31 +36,22 @@ def test_conan_audit_proxy():
                                 "name": "CVE-2023-45853",
                                 "description": "Zip vulnerability",
                                 "severity": "Critical",
-                                "cvss": {
-                                    "preferredBaseScore": 8.9
-                                },
-                                "aliases": [
-                                    "CVE-2023-45853",
-                                    "JFSA-2023-000272529"
-                                ],
+                                "cvss": {"preferredBaseScore": 8.9},
+                                "aliases": ["CVE-2023-45853", "JFSA-2023-000272529"],
                                 "advisories": [
-                                    {
-                                        "name": "CVE-2023-45853"
-                                    },
-                                    {
-                                        "name": "JFSA-2023-000272529"
-                                    }
+                                    {"name": "CVE-2023-45853"},
+                                    {"name": "JFSA-2023-000272529"},
                                 ],
                                 "references": [
                                     "https://pypi.org/project/pyminizip/#history",
-                                ]
+                                ],
                             }
                         }
-                    ]
+                    ],
                 }
             }
         },
-        "error": None
+        "error": None,
     }
 
     tc = TestClient(light=True)
@@ -122,10 +113,15 @@ def test_conan_audit_proxy():
 
     tc.run("audit provider remove conancenter")
     tc.run("audit list zlib/1.2.11", assert_error=True)
-    assert ("ERROR: Provider 'conancenter' not found. Please specify a valid provider name or add "
-            "it using: 'conan audit provider add conancenter --url=https://audit.conan.io/ "
-            "--type=conan-center-proxy --token=<token>'") in tc.out
-    assert "If you don't have a valid token, register at: https://audit.conan.io/register." in tc.out
+    assert (
+        "ERROR: Provider 'conancenter' not found. Please specify a valid provider name or add "
+        "it using: 'conan audit provider add conancenter --url=https://audit.conan.io/ "
+        "--type=conan-center-proxy --token=<token>'"
+    ) in tc.out
+    assert (
+        "If you don't have a valid token, register at: https://audit.conan.io/register."
+        in tc.out
+    )
 
     if platform.system() != "Windows":
         providers_stat = os.stat(os.path.join(tc.cache_folder, "audit_providers.json"))
@@ -147,27 +143,18 @@ def test_conan_audit_private():
                                 "name": "CVE-2023-45853",
                                 "description": "Zip vulnerability",
                                 "severity": "Critical",
-                                "cvss": {
-                                    "preferredBaseScore": 8.9
-                                },
-                                "aliases": [
-                                    "CVE-2023-45853",
-                                    "JFSA-2023-000272529"
-                                ],
+                                "cvss": {"preferredBaseScore": 8.9},
+                                "aliases": ["CVE-2023-45853", "JFSA-2023-000272529"],
                                 "advisories": [
-                                    {
-                                        "name": "CVE-2023-45853"
-                                    },
-                                    {
-                                        "name": "JFSA-2023-000272529"
-                                    }
+                                    {"name": "CVE-2023-45853"},
+                                    {"name": "JFSA-2023-000272529"},
                                 ],
                                 "references": [
                                     "https://pypi.org/project/pyminizip/#history",
-                                ]
+                                ],
                             }
                         }
-                    ]
+                    ],
                 }
             }
         }
@@ -222,12 +209,15 @@ def test_conan_audit_private():
 
     with proxy_response(404, {"errors": [{"message": "Not found"}]}):
         tc.run("audit list zlib/1.2.11 -p=myprivate")
-        assert "An error occurred while connecting to the 'myprivate' provider" in tc.out
+        assert (
+            "An error occurred while connecting to the 'myprivate' provider" in tc.out
+        )
 
 
-
-@pytest.mark.skipif(sys.version_info < (3, 10),
-                    reason="Strict Base64 validation introduced in Python 3.10")
+@pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason="Strict Base64 validation introduced in Python 3.10",
+)
 def test_conan_audit_corrupted_token():
     tc = TestClient(light=True)
 
@@ -241,7 +231,10 @@ def test_conan_audit_corrupted_token():
     with open(json_path, "w") as f:
         json.dump(data, f)
     tc.run("audit list zlib/1.2.11", assert_error=True)
-    assert "Invalid token format for provider 'conancenter'. The token might be corrupt." in tc.out
+    assert (
+        "Invalid token format for provider 'conancenter'. The token might be corrupt."
+        in tc.out
+    )
 
 
 def test_audit_list_conflicting_args():
@@ -253,7 +246,10 @@ def test_audit_list_conflicting_args():
 
 def test_audit_provider_add_missing_url():
     tc = TestClient(light=True)
-    tc.run("audit provider add myprivate --type=private --token=valid_token", assert_error=True)
+    tc.run(
+        "audit provider add myprivate --type=private --token=valid_token",
+        assert_error=True,
+    )
     assert "Name, URL and type are required to add a provider" in tc.out
 
 
@@ -287,9 +283,12 @@ def test_audit_provider_env_credentials_with_proxy(monkeypatch):
         response.headers = {"retry-after": 60}
         return response
 
-    with environment_update({"CONAN_AUDIT_PROVIDER_TOKEN_CONANCENTER": "env_token_value"}):
-        with patch("conan.api.conan_api.RemotesAPI.requester",
-                   new_callable=MagicMock) as requester_mock:
+    with environment_update(
+        {"CONAN_AUDIT_PROVIDER_TOKEN_CONANCENTER": "env_token_value"}
+    ):
+        with patch(
+            "conan.api.conan_api.RemotesAPI.requester", new_callable=MagicMock
+        ) as requester_mock:
             requester_mock.post = fake_post
             tc.run("audit list zlib/1.2.11")
 
@@ -305,10 +304,7 @@ def test_audit_global_error_exception():
     tc = TestClient(light=True)
     tc.run("audit provider auth conancenter --token=valid_token")
 
-    mock_provider_result = {
-        "data": {},
-        "conan_error": "Fatal error."
-    }
+    mock_provider_result = {"data": {}, "conan_error": "Fatal error."}
 
     with patch("conan.api.conan_api.AuditAPI.list", return_value=mock_provider_result):
         tc.run("audit list zlib/1.2.11", assert_error=True)
@@ -321,19 +317,22 @@ def test_audit_global_error_exception():
         assert "ERROR: Fatal error." in tc.out
 
 
-@pytest.mark.parametrize("severity_level, threshold, should_fail", [
-    (1.0, None, False),
-    (8.9, None, False),
-    (9.0, None, True),
-    (9.1, None, True),
-    (5.0, 5.1, False),
-    (5.1, 5.1, True),
-    (5.2, 5.1, True),
-    (9.0, 11.0, False),
-])
+@pytest.mark.parametrize(
+    "severity_level, threshold, should_fail",
+    [
+        (1.0, None, False),
+        (8.9, None, False),
+        (9.0, None, True),
+        (9.1, None, True),
+        (5.0, 5.1, False),
+        (5.1, 5.1, True),
+        (5.2, 5.1, True),
+        (9.0, 11.0, False),
+    ],
+)
 def test_audit_scan_threshold_error(severity_level, threshold, should_fail):
     """In case the severity level is equal or higher than the found for a CVE,
-       the command should output the information as usual, and exit with non-success code error.
+    the command should output the information as usual, and exit with non-success code error.
     """
     successful_response = {
         "data": {
@@ -346,27 +345,18 @@ def test_audit_scan_threshold_error(severity_level, threshold, should_fail):
                                 "name": "CVE-2023-45853",
                                 "description": "Zip vulnerability",
                                 "severity": "Critical",
-                                "cvss": {
-                                    "preferredBaseScore": severity_level
-                                },
-                                "aliases": [
-                                    "CVE-2023-45853",
-                                    "JFSA-2023-000272529"
-                                ],
+                                "cvss": {"preferredBaseScore": severity_level},
+                                "aliases": ["CVE-2023-45853", "JFSA-2023-000272529"],
                                 "advisories": [
-                                    {
-                                        "name": "CVE-2023-45853"
-                                    },
-                                    {
-                                        "name": "JFSA-2023-000272529"
-                                    }
+                                    {"name": "CVE-2023-45853"},
+                                    {"name": "JFSA-2023-000272529"},
                                 ],
                                 "references": [
                                     "https://pypi.org/project/pyminizip/#history",
-                                ]
+                                ],
                             }
                         }
-                    ]
+                    ],
                 }
             }
         }
@@ -380,13 +370,20 @@ def test_audit_scan_threshold_error(severity_level, threshold, should_fail):
 
     with proxy_response(200, successful_response):
         severity_param = "" if threshold is None else f"-sl {threshold}"
-        tc.run(f"audit scan --requires=foobar/0.1.0 {severity_param}", assert_error=should_fail)
+        tc.run(
+            f"audit scan --requires=foobar/0.1.0 {severity_param}",
+            assert_error=should_fail,
+        )
         assert "foobar/0.1.0 1 vulnerability found" in tc.out
         assert f"CVSS: {severity_level}" in tc.out
         if should_fail:
             if threshold is None:
                 threshold = "9.0"
-            assert f"ERROR: The package foobar/0.1.0 has a CVSS score {severity_level} and exceeded the threshold severity level {threshold}" in tc.out
+            assert (
+                f"ERROR: The package foobar/0.1.0 has a CVSS score {severity_level} and exceeded the threshold severity level {threshold}"
+                in tc.out
+            )
+
 
 def test_parse_error_crash_when_no_edges():
     from conan.cli.commands.audit import _parse_error_threshold
@@ -394,15 +391,15 @@ def test_parse_error_crash_when_no_edges():
     scan_result = {
         "data": {
             # this used to crash because dav1d not having vulnerabilities field
-            "dav1d/1.4.3": {"error": {"details": "Package 'dav1d/1.4.3' not scanned: Not found."}},
+            "dav1d/1.4.3": {
+                "error": {"details": "Package 'dav1d/1.4.3' not scanned: Not found."}
+            },
             "zlib/1.2.11": {
                 "vulnerabilities": {
                     "totalCount": 1,
-                    "edges": [
-                        {"node": {"cvss": {"preferredBaseScore": 7.0}}}
-                    ]
+                    "edges": [{"node": {"cvss": {"preferredBaseScore": 7.0}}}],
                 }
-            }
+            },
         }
     }
 

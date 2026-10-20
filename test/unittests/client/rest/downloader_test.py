@@ -19,14 +19,13 @@ class MockResponse:
 
     def iter_content(self, size):
         for i in range(0, len(self.data), size):
-            yield self.data[i:i + size]
+            yield self.data[i : i + size]
 
     def close(self):
         pass
 
 
 class MockRequester:
-
     def __init__(self, data, chunk_size=None, accept_ranges=True, echo_header=None):
         self._data = data
         self._chunk_size = chunk_size if chunk_size is not None else len(data)
@@ -44,13 +43,21 @@ class MockRequester:
             start = int(match.groups()[0])
             assert start < len(self._data)
             status = 206
-            headers.update({"Content-Length": str(len(self._data) - start),
-                            "Content-Range": "bytes {}-{}/{}".format(start, len(self._data) - 1,
-                                                                     len(self._data))})
+            headers.update(
+                {
+                    "Content-Length": str(len(self._data) - start),
+                    "Content-Range": "bytes {}-{}/{}".format(
+                        start, len(self._data) - 1, len(self._data)
+                    ),
+                }
+            )
         else:
             headers.update(self._echo_header)
-        response = MockResponse(self._data[start:start + self._chunk_size], status_code=status,
-                                headers=headers)
+        response = MockResponse(
+            self._data[start : start + self._chunk_size],
+            status_code=status,
+            headers=headers,
+        )
         return response
 
 
@@ -71,8 +78,9 @@ class DownloaderUnitTest(unittest.TestCase):
         expected_content = b"some data"
         requester = MockRequester(expected_content, chunk_size=4)
         downloader = FileDownloader(requester=requester)
-        downloader.download("fake_url", file_path=self.target, verify_ssl=None,
-                            retry=0, retry_wait=0)
+        downloader.download(
+            "fake_url", file_path=self.target, verify_ssl=None, retry=0, retry_wait=0
+        )
         actual_content = open(self.target, "rb").read()
         self.assertEqual(expected_content, actual_content)
 
@@ -92,7 +100,10 @@ class DownloaderUnitTest(unittest.TestCase):
 
     def test_download_with_compressed_content_and_bigger_content_length(self):
         expected_content = b"some data"
-        echo_header = {"Content-Encoding": "gzip", "Content-Length": len(expected_content) + 1}
+        echo_header = {
+            "Content-Encoding": "gzip",
+            "Content-Length": len(expected_content) + 1,
+        }
         requester = MockRequester(expected_content, echo_header=echo_header)
         downloader = FileDownloader(requester=requester)
         downloader.download("fake_url", file_path=self.target)
@@ -101,7 +112,10 @@ class DownloaderUnitTest(unittest.TestCase):
 
     def test_download_with_compressed_content_and_smaller_content_length(self):
         expected_content = b"some data"
-        echo_header = {"Content-Encoding": "gzip", "Content-Length": len(expected_content) - 1}
+        echo_header = {
+            "Content-Encoding": "gzip",
+            "Content-Length": len(expected_content) - 1,
+        }
         requester = MockRequester(expected_content, echo_header=echo_header)
         downloader = FileDownloader(requester=requester)
         downloader.download("fake_url", file_path=self.target)

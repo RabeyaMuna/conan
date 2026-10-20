@@ -11,20 +11,22 @@ from conan.test.utils.env import environment_update
 
 
 class TestCustomCommandsErrors:
-
     def test_import_error_custom_command(self):
         mycommand = textwrap.dedent("""
             import this_doesnt_exist
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
         client.save({f"{command_file_path}": mycommand})
         # Call to any other command, it will fail loading the custom command
         client.run("list *")
-        assert "ERROR: Error loading custom command 'cmd_mycommand.py': " \
-               "No module named 'this_doesnt_exist'" in client.out
+        assert (
+            "ERROR: Error loading custom command 'cmd_mycommand.py': "
+            "No module named 'this_doesnt_exist'" in client.out
+        )
         # But it won't break the whole conan and you can still use the rest of it
         client.run("config home")
         assert client.cache_folder in client.out
@@ -38,12 +40,19 @@ class TestCustomCommandsErrors:
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'mycompany', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            client.cache_folder,
+            "extensions",
+            "commands",
+            "mycompany",
+            "cmd_mycommand.py",
+        )
         client.save({f"{command_file_path}": mycommand})
         # Call to any other command, it will fail loading the custom command,
         client.run("list *")
-        assert "ERROR: Error loading custom command mycompany.cmd_mycommand" in client.out
+        assert (
+            "ERROR: Error loading custom command mycompany.cmd_mycommand" in client.out
+        )
         # But it won't break the whole conan and you can still use the rest of it
         client.run("config home")
         assert client.cache_folder in client.out
@@ -63,7 +72,10 @@ class TestCustomCommandsErrors:
         c.save_home({"extensions/commands/cmd_mycommand.py": mycommand})
         # Call to any other command, it will fail loading the custom command
         c.run("list *")
-        assert "The name for the subcommand method should begin with the main command name" in c.out
+        assert (
+            "The name for the subcommand method should begin with the main command name"
+            in c.out
+        )
 
 
 class TestCustomCommands:
@@ -93,12 +105,13 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
         client.save({f"{command_file_path}": mycommand})
         client.run("mycommand -f cli")
         foldername = os.path.basename(client.cache_folder)
-        assert f'Conan cache folder is: {foldername}' in client.out
+        assert f"Conan cache folder is: {foldername}" in client.out
         client.run("mycommand -f json")
         assert f'{{"cache_folder": "{foldername}"}}' in client.out
 
@@ -133,10 +146,16 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        layer_path = os.path.join(client.cache_folder, 'extensions', 'commands')
-        client.save({os.path.join(layer_path, 'cmd_hello.py'): myhello.format("world"),
-                     os.path.join(layer_path, "greet", 'cmd_hello.py'): myhello.format("moon"),
-                     os.path.join(layer_path, "greet", 'cmd_bye.py'): mybye})
+        layer_path = os.path.join(client.cache_folder, "extensions", "commands")
+        client.save(
+            {
+                os.path.join(layer_path, "cmd_hello.py"): myhello.format("world"),
+                os.path.join(layer_path, "greet", "cmd_hello.py"): myhello.format(
+                    "moon"
+                ),
+                os.path.join(layer_path, "greet", "cmd_bye.py"): mybye,
+            }
+        )
         # Test that the root "hello" without subfolder still works and no conflict
         client.run("hello")
         assert "Hello world!" in client.out
@@ -178,13 +197,14 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'cmd_complex.py')
+        command_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "cmd_complex.py"
+        )
         client.save({f"{command_file_path}": complex_command})
         client.run("complex sub1 myargument -f=cli")
         assert "myargument" in client.out
         client.run("complex sub1 myargument -f json")
-        assert f'{{"argument1": "myargument"}}' in client.out
+        assert '{"argument1": "myargument"}' in client.out
 
     def test_custom_command_with_subcommands_with_underscore(self):
         complex_command = textwrap.dedent("""
@@ -210,10 +230,16 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'cmd_command_with_underscores.py')
+        command_file_path = os.path.join(
+            client.cache_folder,
+            "extensions",
+            "commands",
+            "cmd_command_with_underscores.py",
+        )
         client.save({f"{command_file_path}": complex_command})
-        client.run("command-with-underscores subcommand-with-underscores-too myargument")
+        client.run(
+            "command-with-underscores subcommand-with-underscores-too myargument"
+        )
         assert "myargument" in client.out
 
     def test_overwrite_builtin_command(self):
@@ -232,11 +258,13 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'myteam', 'cmd_install.py')
+        command_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "myteam", "cmd_install.py"
+        )
         client.save({f"{command_file_path}": complex_command})
-        command_file_path = os.path.join(client.cache_folder, 'extensions',
-                                         'commands', 'cmd_install.py')
+        command_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "cmd_install.py"
+        )
         client.save({f"{command_file_path}": complex_command})
         client.run("myteam:install")
         assert "Hello world" in client.out
@@ -268,17 +296,16 @@ class TestCustomCommands:
             """)
 
         client = TestClient()
-        mycommand_file_path = os.path.join(client.cache_folder, 'extensions',
-                                           'commands', 'danimtb', 'cmd_mycommand.py')
-        mycode_file_path = os.path.join(client.cache_folder, 'extensions',
-                                        'commands', 'danimtb', 'mycode.py')
-        client.save({
-            mycode_file_path: mycode,
-            mycommand_file_path: mycommand
-        })
+        mycommand_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "danimtb", "cmd_mycommand.py"
+        )
+        mycode_file_path = os.path.join(
+            client.cache_folder, "extensions", "commands", "danimtb", "mycode.py"
+        )
+        client.save({mycode_file_path: mycode, mycommand_file_path: mycommand})
         client.run("danimtb:mycommand")
         foldername = os.path.basename(client.cache_folder)
-        assert f'Conan cache folder from cmd_mycode: {foldername}' in client.out
+        assert f"Conan cache folder from cmd_mycode: {foldername}" in client.out
 
     def test_custom_command_from_other_location(self):
         """
@@ -299,10 +326,14 @@ class TestCustomCommands:
 
         client = TestClient()
         my_local_layer_path = temp_folder(path_with_spaces=False)
-        layer_path = os.path.join(client.cache_folder, 'extensions', 'commands')
-        client.save({os.path.join(layer_path, 'cmd_hello.py'): myhello.format("world")})
-        client.save({"cmd_hello.py": myhello.format("Overridden")}, path=my_local_layer_path)
-        with environment_update({"_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH": my_local_layer_path}):
+        layer_path = os.path.join(client.cache_folder, "extensions", "commands")
+        client.save({os.path.join(layer_path, "cmd_hello.py"): myhello.format("world")})
+        client.save(
+            {"cmd_hello.py": myhello.format("Overridden")}, path=my_local_layer_path
+        )
+        with environment_update(
+            {"_CONAN_INTERNAL_CUSTOM_COMMANDS_PATH": my_local_layer_path}
+        ):
             client.run("hello")
             # Local commands have preference over Conan custom ones if they collide
             assert "Hello Overridden!" in client.out
@@ -312,8 +343,7 @@ class TestCustomCommands:
 
 
 class TestCommandAPI:
-    @pytest.mark.parametrize("argument", ['["list", "pkg*", "-c"]',
-                                          '"list pkg* -c"'])
+    @pytest.mark.parametrize("argument", ['["list", "pkg*", "-c"]', '"list pkg* -c"'])
     def test_command_reuse_interface(self, argument):
         mycommand = textwrap.dedent(f"""
             import json
@@ -328,14 +358,15 @@ class TestCommandAPI:
             """)
 
         c = TestClient()
-        command_file_path = os.path.join(c.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            c.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
         c.save({f"{command_file_path}": mycommand})
         c.run("mycommand", redirect_stdout="file.json")
         assert json.loads(c.load("file.json")) == {"Local Cache": {}}
 
     def test_command_reuse_other_custom(self):
-        cmd1 = textwrap.dedent(f"""
+        cmd1 = textwrap.dedent("""
             from conan.cli.command import conan_command
             from conan.api.output import cli_out_write
 
@@ -346,7 +377,7 @@ class TestCommandAPI:
                 cli_out_write("MYCMD1!!!!!")
                 conan_api.command.run("mycmd2")
             """)
-        cmd2 = textwrap.dedent(f"""
+        cmd2 = textwrap.dedent("""
             from conan.cli.command import conan_command
             from conan.api.output import cli_out_write
 
@@ -357,15 +388,19 @@ class TestCommandAPI:
             """)
 
         c = TestClient()
-        cmds = os.path.join(c.cache_folder, 'extensions', 'commands')
-        c.save({os.path.join(cmds, "cmd_mycmd1.py"): cmd1,
-                os.path.join(cmds, "cmd_mycmd2.py"): cmd2})
+        cmds = os.path.join(c.cache_folder, "extensions", "commands")
+        c.save(
+            {
+                os.path.join(cmds, "cmd_mycmd1.py"): cmd1,
+                os.path.join(cmds, "cmd_mycmd2.py"): cmd2,
+            }
+        )
         c.run("mycmd1")
         assert "MYCMD1!!!!!" in c.out
         assert "MYCMD2!!!!!" in c.out
 
     def test_command_verbosity_leak(self):
-        mycommand = textwrap.dedent(f"""
+        mycommand = textwrap.dedent("""
                     import json
                     from conan.cli.command import conan_command
                     from conan.api.output import ConanOutput
@@ -383,8 +418,9 @@ class TestCommandAPI:
                     """)
 
         c = TestClient()
-        command_file_path = os.path.join(c.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            c.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
         c.save({f"{command_file_path}": mycommand})
         c.run("mycommand foo -vquiet")
         assert "This is my first title" not in c.out
@@ -404,13 +440,15 @@ class TestCommandAPI:
             """)
 
         c = TestClient()
-        command_file_path = os.path.join(c.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
-        c.save({f"{command_file_path}": mycommand,
-                "conanfile.py": GenConanfile("mylib")})
+        command_file_path = os.path.join(
+            c.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
+        c.save(
+            {f"{command_file_path}": mycommand, "conanfile.py": GenConanfile("mylib")}
+        )
         c.run("mycommand --format=json", redirect_stdout="file.json")
         create_output = json.loads(c.load("file.json"))
-        assert create_output['graph']['nodes']['1']['label'] == "mylib/1.0.0"
+        assert create_output["graph"]["nodes"]["1"]["label"] == "mylib/1.0.0"
 
     def test_subcommand_reuse_interface(self):
         mycommand = textwrap.dedent("""
@@ -431,8 +469,9 @@ class TestCommandAPI:
             """)
 
         c = TestClient()
-        command_file_path = os.path.join(c.cache_folder, 'extensions',
-                                         'commands', 'cmd_mycommand.py')
+        command_file_path = os.path.join(
+            c.cache_folder, "extensions", "commands", "cmd_mycommand.py"
+        )
         c.save({f"{command_file_path}": mycommand})
         c.save({"conanfile.py": GenConanfile("pkg", "0.1")})
         c.run("export .")
@@ -479,8 +518,12 @@ class TestCommandsRemoteCaching:
         c = TestClient(default_server_user=True)
         c.save_home({"extensions/commands/cmd_mycache.py": complex_command})
 
-        c.save({"dep/conanfile.py": GenConanfile("dep", "0.1"),
-                "pkg/conanfile.py": GenConanfile("pkg", "0.1").with_require("dep/0.1")})
+        c.save(
+            {
+                "dep/conanfile.py": GenConanfile("dep", "0.1"),
+                "pkg/conanfile.py": GenConanfile("pkg", "0.1").with_require("dep/0.1"),
+            }
+        )
         c.run("create dep")
         c.run("create pkg")
         c.run("upload * -r=default -c")

@@ -14,12 +14,16 @@ from conan.tools.gnu import GnuToolchain
 
 @pytest.fixture()
 def cross_building_conanfile():
-    settings_build = MockSettings({"os": "Linux",
-                                   "arch": "x86_64",
-                                   "compiler": "gcc",
-                                   "compiler.version": "11",
-                                   "compiler.libcxx": "libstdc++",
-                                   "build_type": "Release"})
+    settings_build = MockSettings(
+        {
+            "os": "Linux",
+            "arch": "x86_64",
+            "compiler": "gcc",
+            "compiler.version": "11",
+            "compiler.libcxx": "libstdc++",
+            "build_type": "Release",
+        }
+    )
     settings_target = MockSettings({"os": "Android", "arch": "armv8"})
     settings = MockSettings({"os": "Emscripten", "arch": "wasm"})
     conanfile = ConanFileMock()
@@ -35,11 +39,15 @@ def test_get_gnu_triplet_for_cross_building():
     having os=Windows and cross compiling
     """
     # Issue: https://github.com/conan-io/conan/issues/10139
-    settings = MockSettings({"build_type": "Release",
-                             "compiler": "gcc",
-                             "compiler.version": "10.2",
-                             "os": "Windows",
-                             "arch": "x86_64"})
+    settings = MockSettings(
+        {
+            "build_type": "Release",
+            "compiler": "gcc",
+            "compiler.version": "10.2",
+            "os": "Windows",
+            "arch": "x86_64",
+        }
+    )
     conanfile = ConanFileMock()
     conanfile.settings = settings
     conanfile.settings_build = MockSettings({"os": "Solaris", "arch": "x86"})
@@ -49,12 +57,16 @@ def test_get_gnu_triplet_for_cross_building():
 
 
 def test_get_toolchain_cppstd():
-    settings = MockSettings({"build_type": "Release",
-                             "compiler": "gcc",
-                             "compiler.version": "9",
-                             "compiler.cppstd": "20",
-                             "os": "Linux",
-                             "arch": "x86_64"})
+    settings = MockSettings(
+        {
+            "build_type": "Release",
+            "compiler": "gcc",
+            "compiler.version": "9",
+            "compiler.cppstd": "20",
+            "os": "Linux",
+            "arch": "x86_64",
+        }
+    )
     conanfile = ConanFileMock()
     conanfile.settings = settings
     conanfile.settings_build = settings
@@ -65,22 +77,30 @@ def test_get_toolchain_cppstd():
     assert at.cppstd == "-std=c++20"
 
 
-@pytest.mark.parametrize("runtime, runtime_type, expected",
-                         [("static", "Debug", "MTd"),
-                          ("static", "Release", "MT"),
-                          ("dynamic", "Debug", "MDd"),
-                          ("dynamic", "Release", "MD")])
+@pytest.mark.parametrize(
+    "runtime, runtime_type, expected",
+    [
+        ("static", "Debug", "MTd"),
+        ("static", "Release", "MT"),
+        ("dynamic", "Debug", "MDd"),
+        ("dynamic", "Release", "MD"),
+    ],
+)
 def test_msvc_runtime(runtime, runtime_type, expected):
     """
     Testing AutotoolsToolchainX with the msvc compiler adjust the runtime
     """
     # Issue: https://github.com/conan-io/conan/issues/10139
-    settings = MockSettings({"build_type": "Release",
-                             "compiler": "msvc",
-                             "compiler.runtime": runtime,
-                             "compiler.runtime_type": runtime_type,
-                             "os": "Windows",
-                             "arch": "x86_64"})
+    settings = MockSettings(
+        {
+            "build_type": "Release",
+            "compiler": "msvc",
+            "compiler.runtime": runtime,
+            "compiler.runtime_type": runtime_type,
+            "os": "Windows",
+            "arch": "x86_64",
+        }
+    )
     conanfile = ConanFileMock()
     conanfile.settings = settings
     conanfile.settings_build = settings
@@ -98,12 +118,16 @@ def test_visual_runtime(runtime):
     Testing AutotoolsToolchainX with the msvc compiler adjust the runtime
     """
     # Issue: https://github.com/conan-io/conan/issues/10139
-    settings = MockSettings({"build_type": "Release" if "d" not in runtime else "Debug",
-                             "compiler": "msvc",
-                             "compiler.runtime": "static" if "MT" in runtime else "dynamic",
-                             "compiler.runtime_type": "Release" if "d" not in runtime else "Debug",
-                             "os": "Windows",
-                             "arch": "x86_64"})
+    settings = MockSettings(
+        {
+            "build_type": "Release" if "d" not in runtime else "Debug",
+            "compiler": "msvc",
+            "compiler.runtime": "static" if "MT" in runtime else "dynamic",
+            "compiler.runtime_type": "Release" if "d" not in runtime else "Debug",
+            "os": "Windows",
+            "arch": "x86_64",
+        }
+    )
     conanfile = ConanFileMock()
     conanfile.settings = settings
     conanfile.settings_build = settings
@@ -121,9 +145,9 @@ def test_get_gnu_triplet_for_cross_building_raise_error():
     having os=Windows, cross compiling and not defined any compiler
     """
     # Issue: https://github.com/conan-io/conan/issues/10139
-    settings = MockSettings({"build_type": "Release",
-                             "os": "Windows",
-                             "arch": "x86_64"})
+    settings = MockSettings(
+        {"build_type": "Release", "os": "Windows", "arch": "x86_64"}
+    )
     conanfile = ConanFileMock()
     conanfile.settings = settings
     conanfile.settings_build = MockSettings({"os": "Solaris", "arch": "x86"})
@@ -135,12 +159,15 @@ def test_get_gnu_triplet_for_cross_building_raise_error():
 
 def test_compilers_mapping():
     autotools_mapping = {"c": "CC", "cpp": "CXX", "cuda": "NVCC", "fortran": "FC"}
-    compilers = {"c": "path_to_c", "cpp": "path_to_cpp", "cuda": "path_to_cuda",
-                 "fortran": "path_to_fortran"}
-    settings = MockSettings({"build_type": "Release",
-                             "os": "Windows",
-                             "arch": "x86_64",
-                             "compiler": "gcc"})
+    compilers = {
+        "c": "path_to_c",
+        "cpp": "path_to_cpp",
+        "cuda": "path_to_cuda",
+        "fortran": "path_to_fortran",
+    }
+    settings = MockSettings(
+        {"build_type": "Release", "os": "Windows", "arch": "x86_64", "compiler": "gcc"}
+    )
     conanfile = ConanFileMock()
     conanfile.conf = Conf()
     conanfile.conf.define("tools.build:compiler_executables", compilers)
@@ -154,11 +181,13 @@ def test_compilers_mapping():
 def test_linker_scripts():
     conanfile = ConanFileMock()
     conanfile.conf = Conf()
-    conanfile.conf.define("tools.build:linker_scripts", ["path_to_first_linker_script", "path_to_second_linker_script"])
-    settings = MockSettings({"build_type": "Release",
-                             "os": "Windows",
-                             "compiler": "gcc",
-                             "arch": "x86_64"})
+    conanfile.conf.define(
+        "tools.build:linker_scripts",
+        ["path_to_first_linker_script", "path_to_second_linker_script"],
+    )
+    settings = MockSettings(
+        {"build_type": "Release", "os": "Windows", "compiler": "gcc", "arch": "x86_64"}
+    )
     conanfile.settings = settings
     at = GnuToolchain(conanfile)
     env = at._environment.vars(conanfile)
@@ -169,12 +198,16 @@ def test_linker_scripts():
 def test_update_or_prune_any_args(cross_building_conanfile):
     # Issue: https://github.com/conan-io/conan/issues/12642
     at = GnuToolchain(cross_building_conanfile)
-    at.configure_args.update({
-        "--with-cross-build": "my_path",
-        "--something-host": "my_host",
-        "--prefix": "/my/other/prefix"
-    })
-    new_configure_args = cmd_args_to_string(GnuToolchain._dict_to_list(at.configure_args))
+    at.configure_args.update(
+        {
+            "--with-cross-build": "my_path",
+            "--something-host": "my_host",
+            "--prefix": "/my/other/prefix",
+        }
+    )
+    new_configure_args = cmd_args_to_string(
+        GnuToolchain._dict_to_list(at.configure_args)
+    )
     assert "--build=x86_64-linux-gnu" in new_configure_args
     assert "--host=wasm32-local-emscripten" in new_configure_args
     assert "--with-cross-build=my_path" in new_configure_args
@@ -183,14 +216,18 @@ def test_update_or_prune_any_args(cross_building_conanfile):
     # https://github.com/conan-io/conan/issues/12431
     at.configure_args.pop("--build")
     at.configure_args.pop("--host")
-    new_configure_args = cmd_args_to_string(GnuToolchain._dict_to_list(at.configure_args))
+    new_configure_args = cmd_args_to_string(
+        GnuToolchain._dict_to_list(at.configure_args)
+    )
     assert "--build=x86_64-linux-gnu" not in new_configure_args  # removed
     assert "--host=wasm32-local-emscripten" not in new_configure_args  # removed
     assert "--with-cross-build=my_path" in new_configure_args
     assert "--something-host=my_host" in new_configure_args
     # Update autoreconf_args
     at.autoreconf_args.pop("--force")
-    new_autoreconf_args = cmd_args_to_string(GnuToolchain._dict_to_list(at.autoreconf_args))
+    new_autoreconf_args = cmd_args_to_string(
+        GnuToolchain._dict_to_list(at.autoreconf_args)
+    )
     assert "'--force" not in new_autoreconf_args
     # Add new value to make_args
     at.make_args.update({"--new-complex-flag": "new-value"})
@@ -199,7 +236,10 @@ def test_update_or_prune_any_args(cross_building_conanfile):
     new_make_args = cmd_args_to_string(GnuToolchain._dict_to_list(at.make_args))
     assert "--new-complex-flag=new-value" in new_make_args
     assert "--new-empty-flag=" in new_make_args
-    assert "--new-no-value-flag" in new_make_args and "--new-no-value-flag=" not in new_make_args
+    assert (
+        "--new-no-value-flag" in new_make_args
+        and "--new-no-value-flag=" not in new_make_args
+    )
 
 
 @patch("conan.tools.gnu.gnutoolchain.VirtualBuildEnv")
@@ -213,7 +253,9 @@ def test_crossbuild_to_android(build_env_mock):
     build_env_mock.return_value = vars
 
     conanfile = ConanFileMock()
-    conanfile.settings = MockSettings({"os": "Android", "arch": "armv8", "os.api_level": "26r"})
+    conanfile.settings = MockSettings(
+        {"os": "Android", "arch": "armv8", "os.api_level": "26r"}
+    )
     conanfile.settings_build = MockSettings({"os": "Macos", "arch": "armv8"})
     gnutc = GnuToolchain(conanfile)
     env_vars = gnutc.extra_env.vars(conanfile)
@@ -225,7 +267,9 @@ def test_crossbuild_to_android(build_env_mock):
 
     # Defining the ndk_path too
     ndk_path = temp_folder()
-    ndk_bin = os.path.join(ndk_path, "toolchains", "llvm", "prebuilt", "darwin-x86_64", "bin")
+    ndk_bin = os.path.join(
+        ndk_path, "toolchains", "llvm", "prebuilt", "darwin-x86_64", "bin"
+    )
     save(conanfile, os.path.join(ndk_bin, "ld"), "")
     conanfile.conf.define("tools.android:ndk_path", ndk_path)
     gnutc = GnuToolchain(conanfile)
@@ -234,13 +278,15 @@ def test_crossbuild_to_android(build_env_mock):
     assert env_vars.get("CXX") is None
     assert gnutc.triplets_info["host"]["triplet"] == "aarch64-linux-android"
     assert env_vars["LD"] == os.path.join(ndk_bin, "ld")  # exists
-    assert env_vars["STRIP"] == os.path.join(ndk_bin, "llvm-strip")  # does not exist but appears
+    assert env_vars["STRIP"] == os.path.join(
+        ndk_bin, "llvm-strip"
+    )  # does not exist but appears
 
 
 def test_gnu_toolchain_conf_extra_configure_args():
-    """ Validate that tools.gnu:extra_configure_args are passed to the configure_args when
-        building with GnuToolchain.
-        The configure args should be passed as a list-like object.
+    """Validate that tools.gnu:extra_configure_args are passed to the configure_args when
+    building with GnuToolchain.
+    The configure args should be passed as a list-like object.
     """
     conanfile = ConanFileMock()
     conanfile.settings = MockSettings({"os": "Linux", "arch": "x86_64"})

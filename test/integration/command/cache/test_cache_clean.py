@@ -12,8 +12,14 @@ from conan.internal.util.files import save
 @pytest.mark.parametrize("use_pkglist", [True, False])
 def test_cache_clean(use_pkglist):
     c = TestClient(default_server_user=True)
-    c.save({"conanfile.py": GenConanfile("pkg", "0.1").with_exports("*").with_exports_sources("*"),
-            "sorces/file.txt": ""})
+    c.save(
+        {
+            "conanfile.py": GenConanfile("pkg", "0.1")
+            .with_exports("*")
+            .with_exports_sources("*"),
+            "sorces/file.txt": "",
+        }
+    )
     c.run("create .")
     ref_layout = c.exported_layout()
     pkg_layout = c.created_layout()
@@ -27,15 +33,17 @@ def test_cache_clean(use_pkglist):
         c.run("list *:*#* -f=json", redirect_stdout="pkglist.json")
         pkglist = c.load("pkglist.json")
     arg = "--list=pkglist.json" if use_pkglist else "*"
-    c.run(f'cache clean {arg} -s -b -v')
-    assert f"{ref_layout.reference.repr_notime()}: Cleaning recipe cache contents" in c.out
+    c.run(f"cache clean {arg} -s -b -v")
+    assert (
+        f"{ref_layout.reference.repr_notime()}: Cleaning recipe cache contents" in c.out
+    )
     assert f"{pkg_layout.reference}: Cleaning package cache contents" in c.out
     assert not os.path.exists(pkg_layout.build())
     assert not os.path.exists(ref_layout.source())
     assert os.path.exists(ref_layout.download_export())
     assert os.path.exists(pkg_layout.download_package())
 
-    c.run('cache clean -d')
+    c.run("cache clean -d")
     assert not os.path.exists(ref_layout.download_export())
     assert not os.path.exists(pkg_layout.download_package())
 
@@ -45,9 +53,15 @@ def test_cache_clean(use_pkglist):
 
 def test_cache_clean_all():
     c = TestClient()
-    c.save({"pkg1/conanfile.py": GenConanfile("pkg", "0.1").with_class_attribute("revision_mode='scm'"),
+    c.save(
+        {
+            "pkg1/conanfile.py": GenConanfile("pkg", "0.1").with_class_attribute(
+                "revision_mode='scm'"
+            ),
             "pkg2/conanfile.py": GenConanfile("pkg", "0.2").with_package("error"),
-            "pkg3/conanfile.py": GenConanfile("pkg", "0.3")})
+            "pkg3/conanfile.py": GenConanfile("pkg", "0.3"),
+        }
+    )
     c.run("create pkg1", assert_error=True)
     c.run("create pkg2", assert_error=True)
     c.run("create pkg3")
@@ -56,7 +70,7 @@ def test_cache_clean_all():
     assert len(os.listdir(temp_folder)) == 1  # Failed export was here
     builds_folder = os.path.join(c.cache_folder, "p", "b")
     assert len(os.listdir(builds_folder)) == 2  # both builds are here
-    c.run('cache clean')
+    c.run("cache clean")
     assert not os.path.exists(temp_folder)
     assert len(os.listdir(builds_folder)) == 1  # only correct pkg/0.3 remains
     # Check correct package removed all
@@ -69,7 +83,7 @@ def test_cache_clean_all():
 
     # A second clean like this used to crash
     # as it tried to delete a folder that was not there and tripped shutils up
-    c.run('cache clean')
+    c.run("cache clean")
     assert not os.path.exists(temp_folder)
 
 
@@ -94,9 +108,9 @@ def test_cache_multiple_builds_same_prev_clean():
 
     builds_folder = os.path.join(c.cache_folder, "p", "b")
     assert len(os.listdir(builds_folder)) == 1  # only one build
-    c.run('cache clean')
+    c.run("cache clean")
     assert len(os.listdir(builds_folder)) == 1  # one build not cleaned
-    c.run('remove * -c')
+    c.run("remove * -c")
     assert len(os.listdir(builds_folder)) == 0  # no folder remain
 
 
@@ -106,9 +120,15 @@ def test_cache_multiple_builds_diff_prev_clean():
     same exact prev, leaving trailing non-referenced folders
     """
     c = TestClient()
-    package_lines = 'save(self, os.path.join(self.package_folder, "foo.txt"), str(time.time()))'
-    gen = GenConanfile("pkg", "0.1").with_package(package_lines).with_import("import os, time") \
-                                    .with_import("from conan.tools.files import save")
+    package_lines = (
+        'save(self, os.path.join(self.package_folder, "foo.txt"), str(time.time()))'
+    )
+    gen = (
+        GenConanfile("pkg", "0.1")
+        .with_package(package_lines)
+        .with_import("import os, time")
+        .with_import("from conan.tools.files import save")
+    )
     c.save({"conanfile.py": gen})
     c.run("create .")
     create_out = c.out
@@ -124,9 +144,9 @@ def test_cache_multiple_builds_diff_prev_clean():
 
     builds_folder = os.path.join(c.cache_folder, "p", "b")
     assert len(os.listdir(builds_folder)) == 2  # both builds are here
-    c.run('cache clean')
+    c.run("cache clean")
     assert len(os.listdir(builds_folder)) == 2  # two builds will remain, both are valid
-    c.run('remove * -c')
+    c.run("remove * -c")
     assert len(os.listdir(builds_folder)) == 0  # no folder remain
 
 
@@ -136,7 +156,9 @@ def test_cache_clean_custom_storage():
     save(c.paths.global_conf_path, f"core.cache:storage_path={t}")
     c.save({"conanfile.py": GenConanfile("pkg", "0.1").with_cmake_build()})
     c.run("create .", assert_error=True)
-    build_folder = re.search(r"pkg/0.1: Building your package in (\S+)", str(c.out)).group(1)
+    build_folder = re.search(
+        r"pkg/0.1: Building your package in (\S+)", str(c.out)
+    ).group(1)
     assert os.listdir(build_folder)
     # now clean
     c.run("cache clean")
