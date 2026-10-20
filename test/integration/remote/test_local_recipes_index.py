@@ -31,14 +31,20 @@ def c3i_folder():
                 self.output.info(f"CONANDATA: {self.conan_data}")
                 self.output.info(f"BUILDING: {load(self, 'file.h')}")
             """)
-    save_files(recipes_folder,
-               {"zlib/config.yml": zlib_config,
-                "zlib/all/conanfile.py": zlib,
-                "zlib/all/conandata.yml": "",
-                "zlib/all/file.h": "//myheader"})
+    save_files(
+        recipes_folder,
+        {
+            "zlib/config.yml": zlib_config,
+            "zlib/all/conanfile.py": zlib,
+            "zlib/all/conandata.yml": "",
+            "zlib/all/file.h": "//myheader",
+        },
+    )
     mkdir(os.path.join(recipes_folder, "openssl", "1.X"))
     mkdir(os.path.join(recipes_folder, "openssl", "2.X"))
-    save(os.path.join(recipes_folder, "openssl", "config.yml"), textwrap.dedent("""
+    save(
+        os.path.join(recipes_folder, "openssl", "config.yml"),
+        textwrap.dedent("""
         versions:
           "1.0":
             folder: "1.X"
@@ -46,19 +52,29 @@ def c3i_folder():
             folder: "1.X"
           "2.0":
             folder: "2.X"
-        """))
-    save(os.path.join(recipes_folder, "openssl", "1.X", "conanfile.py"),
-         str(GenConanfile().with_require("zlib/1.2.8")))
-    save(os.path.join(recipes_folder, "openssl", "2.X", "conanfile.py"),
-         str(GenConanfile().with_require("zlib/1.2.11")))
+        """),
+    )
+    save(
+        os.path.join(recipes_folder, "openssl", "1.X", "conanfile.py"),
+        str(GenConanfile().with_require("zlib/1.2.8")),
+    )
+    save(
+        os.path.join(recipes_folder, "openssl", "2.X", "conanfile.py"),
+        str(GenConanfile().with_require("zlib/1.2.11")),
+    )
     mkdir(os.path.join(recipes_folder, "libcurl", "all"))
-    save(os.path.join(recipes_folder, "libcurl", "config.yml"), textwrap.dedent("""
+    save(
+        os.path.join(recipes_folder, "libcurl", "config.yml"),
+        textwrap.dedent("""
             versions:
               "1.0":
                 folder: "all"
-            """))
-    save(os.path.join(recipes_folder, "libcurl", "all", "conanfile.py"),
-         str(GenConanfile().with_require("openssl/2.0")))
+            """),
+    )
+    save(
+        os.path.join(recipes_folder, "libcurl", "all", "conanfile.py"),
+        str(GenConanfile().with_require("openssl/2.0")),
+    )
 
     save(os.path.join(recipes_folder, ".DS_Store", "foo"), "")
 
@@ -68,10 +84,13 @@ def c3i_folder():
 class TestSearchList:
     def test_basic_search(self, c3i_folder):
         client = TestClient(light=True)
-        client.run(f"remote add local '{c3i_folder}' --type=local-recipes-index")  # Keep --type test
+        client.run(
+            f"remote add local '{c3i_folder}' --type=local-recipes-index"
+        )  # Keep --type test
         assert "WARN" not in client.out  # Make sure it does not complain about url
         client.run("search *")
-        assert textwrap.dedent("""\
+        assert (
+            textwrap.dedent("""\
             local
               libcurl
                 libcurl/1.0
@@ -82,7 +101,9 @@ class TestSearchList:
               zlib
                 zlib/1.2.8
                 zlib/1.2.11
-            """) in client.out
+            """)
+            in client.out
+        )
 
     def test_list_refs(self, c3i_folder):
         client = TestClient(light=True)
@@ -122,7 +143,9 @@ class TestSearchList:
         client.run(f"remote add local '{c3i_folder}'")
         client.run("list libcurl/1.0:* -r=local --format=json")
         listjson = json.loads(client.stdout)
-        rev = listjson["local"]["libcurl/1.0"]["revisions"]["e468388f0e4e098d5b62ad68979aebd5"]
+        rev = listjson["local"]["libcurl/1.0"]["revisions"][
+            "e468388f0e4e098d5b62ad68979aebd5"
+        ]
         assert rev["packages"] == {}
 
 
@@ -133,9 +156,11 @@ class TestInstall:
         c.run("install --requires=libcurl/1.0 --build missing")
         assert "zlib/1.2.11: CONANDATA: {}" in c.out
         assert "zlib/1.2.11: BUILDING: //myheader" in c.out
-        bins = {"libcurl/1.0": ("aa69c1e1e39a18fe70001688213dbb7ada95f890", "Build"),
-                "openssl/2.0": ("594ed0eb2e9dfcc60607438924c35871514e6c2a", "Build"),
-                "zlib/1.2.11": ("da39a3ee5e6b4b0d3255bfef95601890afd80709", "Build")}
+        bins = {
+            "libcurl/1.0": ("aa69c1e1e39a18fe70001688213dbb7ada95f890", "Build"),
+            "openssl/2.0": ("594ed0eb2e9dfcc60607438924c35871514e6c2a", "Build"),
+            "zlib/1.2.11": ("da39a3ee5e6b4b0d3255bfef95601890afd80709", "Build"),
+        }
         c.assert_listed_binary(bins)
 
         # Already installed in the cache
@@ -146,9 +171,11 @@ class TestInstall:
 
         # Update doesn't fail, but doesn't update revision time
         c.run("install --requires libcurl/1.0 --update")
-        bins = {"libcurl/1.0": "Cache (Updated date) (local)",
-                "openssl/2.0": "Cache (Updated date) (local)",
-                "zlib/1.2.11": "Cache (Updated date) (local)"}
+        bins = {
+            "libcurl/1.0": "Cache (Updated date) (local)",
+            "openssl/2.0": "Cache (Updated date) (local)",
+            "zlib/1.2.11": "Cache (Updated date) (local)",
+        }
 
         c.assert_listed_require(bins)
         assert "zlib/1.2.11: Already installed!" in c.out
@@ -157,8 +184,10 @@ class TestInstall:
 
         # Doing local changes creates a new revision
         # New recipe revision for the zlib library
-        save(os.path.join(c3i_folder, "recipes", "zlib", "all", "conanfile.py"),
-             str(GenConanfile()) + "\n")
+        save(
+            os.path.join(c3i_folder, "recipes", "zlib", "all", "conanfile.py"),
+            str(GenConanfile()) + "\n",
+        )
         c.run("install --requires=libcurl/1.0 --build missing --update")
         # it is updated
         assert "zlib/1.2.11#dd82451a95902c89bb66a2b980c72de5 - Updated (local)" in c.out
@@ -184,10 +213,14 @@ class TestInstall:
                     self.output.info(load(self, myfile))
                 """)
         deps_json = '{"potato": 42}'
-        save_files(recipes_folder,
-                   {"boost/config.yml": boost_config,
-                    "boost/all/conanfile.py": boost,
-                    "boost/all/dependencies/myfile.json": deps_json})
+        save_files(
+            recipes_folder,
+            {
+                "boost/config.yml": boost_config,
+                "boost/all/conanfile.py": boost,
+                "boost/all/dependencies/myfile.json": deps_json,
+            },
+        )
         c = TestClient(light=True)
         c.run(f"remote add local '{folder}'")
         c.run("install --requires=boost/[*] --build missing")
@@ -210,10 +243,14 @@ class TestInstall:
               "1.0":
                 - patch_file: "patches/1.3/0001-fix-cmake.patch"
             """)
-        save_files(recipes_folder,
-                   {"pkg/config.yml": config,
-                    "pkg/all/conanfile.py": str(GenConanfile("pkg")),
-                    "pkg/all/conandata.yml": conandata})
+        save_files(
+            recipes_folder,
+            {
+                "pkg/config.yml": config,
+                "pkg/all/conanfile.py": str(GenConanfile("pkg")),
+                "pkg/all/conandata.yml": conandata,
+            },
+        )
         c = TestClient(light=True)
         c.run(f"remote add local '{folder}'")
         c.run("install --requires=pkg/1.0 --build missing -vvv")
@@ -268,24 +305,31 @@ class TestInstall:
             @@ -0,0 +1 @@
             +hello
             """)
-        save_files(recipes_folder,
-                   {"zlib/config.yml": zlib_config,
-                    "zlib/all/conanfile.py": zlib.format(name="zlib"),
-                    "zlib/all/conandata.yml": conandata_yml,
-                    "zlib/all/patches/patch1": patch,
-                    "zlib/all/main.cpp": "\n",
-                    "zlib-ng/config.yml": zlib_config,
-                    "zlib-ng/all/conanfile.py": zlib.format(name="zlib-ng"),
-                    "zlib-ng/all/conandata.yml": conandata_yml,
-                    "zlib-ng/all/patches/patch1": patch,
-                    "zlib-ng/all/main.cpp": "\n"}
-                   )
+        save_files(
+            recipes_folder,
+            {
+                "zlib/config.yml": zlib_config,
+                "zlib/all/conanfile.py": zlib.format(name="zlib"),
+                "zlib/all/conandata.yml": conandata_yml,
+                "zlib/all/patches/patch1": patch,
+                "zlib/all/main.cpp": "\n",
+                "zlib-ng/config.yml": zlib_config,
+                "zlib-ng/all/conanfile.py": zlib.format(name="zlib-ng"),
+                "zlib-ng/all/conandata.yml": conandata_yml,
+                "zlib-ng/all/patches/patch1": patch,
+                "zlib-ng/all/main.cpp": "\n",
+            },
+        )
         client = TestClient(default_server_user=True, light=True)
-        client.run(f"create '{os.path.join(recipes_folder, "zlib-ng", "all")}' --version=0.1")
+        client.run(
+            f"create '{os.path.join(recipes_folder, "zlib-ng", "all")}' --version=0.1"
+        )
         client.run("upload zlib-ng/0.1:* -r=default -c")
         client.run("remove zlib-ng/0.1 -c")
         client.run(f"remote add local '{folder}' --index 0")
-        client.run("install --output-folder=. --requires=zlib-ng/0.1 --requires=zlib/0.1 --build=missing -vv")
+        client.run(
+            "install --output-folder=. --requires=zlib-ng/0.1 --requires=zlib/0.1 --build=missing -vv"
+        )
         assert "zlib/0.1: Copied 1 file: patch1" in client.out
         assert "zlib/0.1: Apply patch (file): patches/patch1" in client.out
 
@@ -297,15 +341,23 @@ class TestInstall:
               "0.1":
                 folder: all
             """)
-        zlib = GenConanfile("zlib").with_class_attribute("user='myuser'")\
-                                   .with_class_attribute("channel='mychannel'")
+        zlib = (
+            GenConanfile("zlib")
+            .with_class_attribute("user='myuser'")
+            .with_class_attribute("channel='mychannel'")
+        )
         conandata_yml = textwrap.dedent("""\
             versions:
               "0.1":
             """)
-        save_files(recipes_folder, {"zlib/config.yml": zlib_config,
-                                    "zlib/all/conanfile.py": str(zlib),
-                                    "zlib/all/conandata.yml": conandata_yml})
+        save_files(
+            recipes_folder,
+            {
+                "zlib/config.yml": zlib_config,
+                "zlib/all/conanfile.py": str(zlib),
+                "zlib/all/conandata.yml": conandata_yml,
+            },
+        )
         client = TestClient()
         client.run(f"remote add local '{folder}'")
         client.run("install --requires=zlib/0.1@myuser/mychannel --build=missing")
@@ -324,7 +376,9 @@ class TestRestrictedOperations:
         c.save({"conanfile.py": GenConanfile("pkg", "0.1")})
         c.run("create .")
         c.run("upload pkg/0.1 -r=local", assert_error=True)
-        assert "ERROR: Remote local-recipes-index 'local' doesn't support upload" in c.out
+        assert (
+            "ERROR: Remote local-recipes-index 'local' doesn't support upload" in c.out
+        )
 
 
 class TestErrorsUx:
@@ -340,9 +394,10 @@ class TestErrorsUx:
             class Zlib(ConanFile):
                 name = "zlib"
                 """)
-        save_files(recipes_folder,
-                   {"zlib/config.yml": zlib_config,
-                    "zlib/all/conanfile.py": zlib})
+        save_files(
+            recipes_folder,
+            {"zlib/config.yml": zlib_config, "zlib/all/conanfile.py": zlib},
+        )
         c = TestClient(light=True)
         c.run(f"remote add local '{folder}'")
         c.run("install --requires=zlib/[*] --build missing", assert_error=True)
@@ -357,9 +412,13 @@ class TestErrorsUx:
              "1.2.11":
                folder: all
            """)
-        save_files(recipes_folder,
-                   {"zlib/config.yml": zlib_config,
-                    "zlib/all/conanfile.py": str(GenConanfile("zlib"))})
+        save_files(
+            recipes_folder,
+            {
+                "zlib/config.yml": zlib_config,
+                "zlib/all/conanfile.py": str(GenConanfile("zlib")),
+            },
+        )
         c = TestClient(light=True)
         c.run(f"remote add local '{folder}'")
         c.run("install --requires=zlib/1.2.11#rev1", assert_error=True)
@@ -379,9 +438,14 @@ class TestErrorsUx:
           versions:
             "0.1":
           """)
-        save_files(recipes_folder, {"zlib/config.yml": zlib_config,
-                                    "zlib/all/conanfile.py": str(zlib),
-                                    "zlib/all/conandata.yml": conandata_yml})
+        save_files(
+            recipes_folder,
+            {
+                "zlib/config.yml": zlib_config,
+                "zlib/all/conanfile.py": str(zlib),
+                "zlib/all/conandata.yml": conandata_yml,
+            },
+        )
         c = TestClient()
         c.run(f"remote add local '{folder}'")
         c.run("install --requires=zlib/0.1@myuser/mychannel", assert_error=True)
@@ -412,11 +476,15 @@ class TestPythonRequires:
                 folder: all
             """)
         pkg = str(GenConanfile("pkg").with_python_requires("pyreq/1.0"))
-        save_files(recipes_folder,
-                   {"pkg/config.yml": config,
-                    "pkg/all/conanfile.py": pkg,
-                    "pyreq/config.yml": config,
-                    "pyreq/all/conanfile.py": str(GenConanfile("pyreq", "1.0"))})
+        save_files(
+            recipes_folder,
+            {
+                "pkg/config.yml": config,
+                "pkg/all/conanfile.py": pkg,
+                "pyreq/config.yml": config,
+                "pyreq/all/conanfile.py": str(GenConanfile("pyreq", "1.0")),
+            },
+        )
         return folder
 
     def test_install(self, c3i_pyrequires_folder):
@@ -426,7 +494,9 @@ class TestPythonRequires:
         assert "pyreq/1.0" in c.out
         assert "pkg/1.0" in c.out
         c.run("install --requires=pkg/1.0 --build missing -vvv")
-        assert "pyreq/1.0#a0d63ca853edefa33582a24a1bb3c75f - Downloaded (local)" in c.out
+        assert (
+            "pyreq/1.0#a0d63ca853edefa33582a24a1bb3c75f - Downloaded (local)" in c.out
+        )
         assert "pkg/1.0: Created package" in c.out
 
 
@@ -442,37 +512,55 @@ class TestUserChannel:
                   "2.0":
                     folder: other
                 """)
-        pkg = str(GenConanfile("pkg").with_class_attribute("user='myuser'")
-                                     .with_class_attribute("channel='mychannel'"))
-        save_files(recipes_folder,
-                   {"pkg/config.yml": config,
-                    "pkg/all/conanfile.py": pkg,
-                    "pkg/other/conanfile.py": str(GenConanfile("pkg"))})
+        pkg = str(
+            GenConanfile("pkg")
+            .with_class_attribute("user='myuser'")
+            .with_class_attribute("channel='mychannel'")
+        )
+        save_files(
+            recipes_folder,
+            {
+                "pkg/config.yml": config,
+                "pkg/all/conanfile.py": pkg,
+                "pkg/other/conanfile.py": str(GenConanfile("pkg")),
+            },
+        )
         return folder
 
     def test_user_channel_requirement(self, c3i_user_channel_folder):
         tc = TestClient(light=True)
         tc.run(f"remote add local '{c3i_user_channel_folder}'")
         tc.run("graph info --requires=pkg/[*]@myuser/mychannel")
-        assert "Version range '*' from requirement 'pkg/[*]@myuser/mychannel'" not in tc.out
+        assert (
+            "Version range '*' from requirement 'pkg/[*]@myuser/mychannel'"
+            not in tc.out
+        )
         assert "pkg/[*]@myuser/mychannel: pkg/1.0@myuser/mychannel" in tc.out
-        assert "pkg/1.0@myuser/mychannel#0b23a5938afb0457079e41aac8991595 - Downloaded (local)" in tc.out
+        assert (
+            "pkg/1.0@myuser/mychannel#0b23a5938afb0457079e41aac8991595 - Downloaded (local)"
+            in tc.out
+        )
 
     @pytest.mark.parametrize("user_channel", ["@foo/bar", "@foo"])
-    def test_user_channel_requirement_no_match(self, c3i_user_channel_folder, user_channel):
+    def test_user_channel_requirement_no_match(
+        self, c3i_user_channel_folder, user_channel
+    ):
         tc = TestClient(light=True)
         tc.run(f"remote add local '{c3i_user_channel_folder}'")
         tc.run(f"graph info --requires=pkg/[*]{user_channel}", assert_error=True)
-        assert f"Version range '*' from requirement 'pkg/[*]{user_channel}' required by 'None' could not be resolved." in tc.out
+        assert (
+            f"Version range '*' from requirement 'pkg/[*]{user_channel}' required by 'None' could not be resolved."
+            in tc.out
+        )
 
     def test_user_channel_requirement_only_at(self, c3i_user_channel_folder):
         tc = TestClient(light=True)
         tc.run(f"remote add local '{c3i_user_channel_folder}'")
-        tc.run(f"graph info --requires=pkg/[*]@")
-        assert f"pkg/[*]: pkg/2.0" in tc.out
+        tc.run("graph info --requires=pkg/[*]@")
+        assert "pkg/[*]: pkg/2.0" in tc.out
 
-        tc.run(f"graph info --requires=pkg/[<2]@", assert_error=True)
-        assert f" Package 'pkg/[<2]' not resolved" in tc.out
+        tc.run("graph info --requires=pkg/[<2]@", assert_error=True)
+        assert " Package 'pkg/[<2]' not resolved" in tc.out
 
-        tc.run(f"graph info --requires=pkg/[<2]", assert_error=True)
-        assert f" Package 'pkg/[<2]' not resolved" in tc.out
+        tc.run("graph info --requires=pkg/[<2]", assert_error=True)
+        assert " Package 'pkg/[<2]' not resolved" in tc.out
