@@ -192,15 +192,21 @@ tools_locations = {
             "path": {'Linux': '/usr/share/qbs/bin'}
         }
     },
-    "emcc": {},
-    "node": {},
+    "emcc": {
+        "exe": "emcc",
+        "default": "system",
+        "system": {"path": {'Linux': '/usr/bin',
+                             'Windows': 'C:/Program Files/Emscripten',
+                             'Darwin': '/usr/local/bin'}}
+    },
+    "node": {
+        "exe": "node",
+        "default": "system",
+        "system": {"path": {'Linux': '/usr/bin',
+                             'Windows': 'C:/Program Files/nodejs',
+                             'Darwin': '/usr/local/bin'}}
+    },
     # TODO: Intel oneAPI is not installed in CI yet. Uncomment this line whenever it's done.
-    # "intel_oneapi": {
-    #     "default": "2021.3",
-    #     "exe": "dpcpp",
-    #     "2021.3": {"path": {"Linux": "/opt/intel/oneapi/compiler/2021.3.0/linux/bin"}}
-    # }
-}
 
 
 # TODO: Make this match the default tools (compilers) above automatically

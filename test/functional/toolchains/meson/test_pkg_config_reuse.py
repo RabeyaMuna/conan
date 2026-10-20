@@ -6,6 +6,9 @@ import textwrap
 from conan.test.assets.sources import gen_function_cpp
 from test.functional.toolchains.meson._base import TestMesonBase
 
+# Ensure pkg_config tool is available for the test
+pytestmark = pytest.mark.tool("pkg_config")
+
 
 @pytest.mark.tool("pkg_config")
 class MesonPkgConfigTest(TestMesonBase):

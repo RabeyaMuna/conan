@@ -47,6 +47,8 @@ class MesonTest(TestMesonBase):
                 meson.test()
         """)
 
+    @pytest.mark.tool("meson")
+    @pytest.mark.tool("pkg_config")
     def test_reuse(self):
         self.t.run("new cmake_lib -d name=hello -d version=0.1")
 
