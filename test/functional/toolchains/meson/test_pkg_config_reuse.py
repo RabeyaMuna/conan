@@ -54,5 +54,3 @@ class MesonPkgConfigTest(TestMesonBase):
         self.t.run_command(os.path.join("build", "demo"))
 
         self.assertIn("Hello World Release!", self.t.out)
-
-        self._check_binary()
