@@ -5,7 +5,6 @@ import textwrap
 import pytest
 
 from conan.api.subapi.workspace import WorkspaceAPI
-from conan.internal.util.files import chdir
 from conan.test.utils.tools import TestClient
 
 WorkspaceAPI.TEST_ENABLED = "will_break_next"
@@ -40,7 +39,9 @@ def test_metabuild():
     assert os.path.exists(os.path.join(c.current_folder, "CMakeUserPresets.json"))
     build_folder = "build/Release" if platform.system() != "Windows" else "build"
     assert os.path.exists(os.path.join(c.current_folder, build_folder, "generators"))
-    config_preset = "conan-default" if platform.system() == "Windows" else "conan-release"
+    config_preset = (
+        "conan-default" if platform.system() == "Windows" else "conan-release"
+    )
     c.run_command(f"cmake --preset {config_preset}")
     assert "Conan: Target declared 'mymath::mymath'" in c.out
     assert "Adding project liba" in c.out
@@ -92,5 +93,11 @@ def test_relative_paths():
         assert conanws_yml == c.load("conanws.yml")
 
     ext = ".exe" if platform.system() == "Windows" else ""
-    assert os.path.exists(os.path.join(c.current_folder, "app1", "build", "Release", f"app1{ext}"))
-    assert os.path.exists(os.path.join(c.current_folder, "other", "app2", "build", "Release", f"app2{ext}"))
+    assert os.path.exists(
+        os.path.join(c.current_folder, "app1", "build", "Release", f"app1{ext}")
+    )
+    assert os.path.exists(
+        os.path.join(
+            c.current_folder, "other", "app2", "build", "Release", f"app2{ext}"
+        )
+    )
