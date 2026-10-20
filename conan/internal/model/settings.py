@@ -111,9 +111,11 @@ class SettingsItem:
             raise undefined_field(self._name, item, None, self._value)
         if self._value is None:
             raise ConanException("'%s' value not defined" % self._name)
-        return self._get_definition()
+        return self._definition.get(self._value, {}).get(item)
 
     def _get_definition(self):
+        if self._value is None:
+            raise ConanException("'%s' value not defined" % self._name)
         if self._value not in self._definition and "ANY" in self._definition:
             return self._definition["ANY"]
         return self._definition[self._value]
