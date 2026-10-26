@@ -229,6 +229,13 @@ tools_environments = {
 _cached_tools = {}
 
 
+def _skip_missing_tools():
+    skip_missing_tools = os.getenv("CONAN_TEST_SKIP_MISSING_TOOLS")
+    if skip_missing_tools is not None:
+        return skip_missing_tools == "1"
+    return os.getenv("GITHUB_ACTIONS") == "true"
+
+
 def _get_tool(name, version):
     # None: not cached yet
     # False = tool not available, legally skipped
@@ -347,6 +354,9 @@ def pytest_runtest_setup(item):
         result = _get_tool(tool_name, tool_version)
         if result is True:
             version_msg = "Any" if tool_version is None else tool_version
+            if _skip_missing_tools():
+                pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
+                                                                                      version_msg))
             pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
                                                                                   version_msg))
         if result is False:
