@@ -456,8 +456,16 @@ class _Component:
         for varname in _ALL_NAMES:
             other_values = getattr(other, varname)
             if other_values is not None:
+                if varname == "_package_framework" and not isinstance(other_values, list):
+                    continue
                 if not overwrite:
-                    current_values = self.get_init(varname, [])
+                    if varname == "_package_framework":
+                        current_values = getattr(self, varname)
+                        if not isinstance(current_values, list):
+                            setattr(self, varname, [])
+                            current_values = getattr(self, varname)
+                    else:
+                        current_values = self.get_init(varname, [])
                     merge_list(other_values, current_values)
                 else:
                     setattr(self, varname, other_values)
@@ -465,6 +473,8 @@ class _Component:
         for varname in _SINGLE_VALUE_VARS:  # To allow editable of .exe/.location
             other_values = getattr(other, varname)
             if other_values is not None:
+                if varname == "package_framework" and isinstance(other_values, list):
+                    continue
                 # Just overwrite the existing value, not possible to append
                 setattr(self, varname, other_values)
 
