@@ -912,6 +912,7 @@ class TestGitMonorepoSCMFlow:
                                             folder=folder)
 
         c = TestClient(default_server_user=True)
+        c.run_command('git -C "{}" config receive.denyCurrentBranch updateInstead'.format(folder))
         c.run_command('git clone "{}" .'.format(url))
         c.run("create sub1")
         commit = re.search(r"CAPTURING COMMIT: (\S+)!!!", str(c.out)).group(1)
