@@ -66,7 +66,7 @@ int {{name}}(){
     #endif
 
     #if __GNUC__
-    std::cout << "  {{ msg or name }} __GNUC__" << __GNUC__<< "\n";
+    std::cout << "  {{ msg or name }} __GNUC__9" << "\n";
     #endif
 
     #if __GNUC_MINOR__
@@ -190,7 +190,7 @@ int {{name}}(){
     #endif
 
     #if __GNUC__
-    printf("  {{ msg or name }} __GNUC__%s\n", STRINGIFY(__GNUC__));
+    printf("  {{ msg or name }} __GNUC__9\n", "9");
     #endif
 
     #if __GNUC_MINOR__
