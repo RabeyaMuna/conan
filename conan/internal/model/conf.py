@@ -263,6 +263,10 @@ class _ConfValue:
                 new_value = other._value.copy()
                 new_value.update(self._value)
                 self._value = new_value
+        elif issubclass(v_type, numbers.Number) and issubclass(o_type, numbers.Number):
+            # int and float values are compatible scalar definitions. The higher-priority value
+            # in self is kept, as with other scalar definitions.
+            pass
         elif self._value is None or other._value is None:
             # It means any of those values were an "unset" so doing nothing because we don't
             # really know the original value type
