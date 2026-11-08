@@ -912,6 +912,7 @@ class TestGitMonorepoSCMFlow:
                                             folder=folder)
 
         c = TestClient(default_server_user=True)
+        c.run_command('git -C "{}" config receive.denyCurrentBranch updateInstead'.format(folder))
         c.run_command('git clone "{}" .'.format(url))
         c.run("create sub1")
         commit = re.search(r"CAPTURING COMMIT: (\S+)!!!", str(c.out)).group(1)
@@ -920,6 +921,7 @@ class TestGitMonorepoSCMFlow:
 
         c.save({"sub2/src/myfile.h": "my2header!"})
         git_add_changes_commit(folder=c.current_folder)
+        c.run_command("git push")
         c.run("create sub2")
         assert "pkg2/0.1: MYCMAKE-BUILD: mycmake2!" in c.out
         assert "pkg2/0.1: MYFILE-BUILD: my2header!" in c.out
