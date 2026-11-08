@@ -153,16 +153,19 @@ tools_locations = {
         "system": {"path": {'Windows': "C:/tools/cygwin/bin"}},
     },
     'bazel': {
-        "default": "7",
+        "default": "7.4.1",
         "6.5.0": {"path": {'Linux': '/usr/share/bazel-6.5.0/bin',
                            'Windows': 'C:/tools/bazel/6.5.0',
-                           'Darwin': '/Users/runner/Applications/bazel/6.5.0'}},
+                           'Darwin': '/Users/runner/Applications/bazel/6.5.0'},
+                  "env": {"USE_BAZEL_VERSION": "6.5.0"}},
         "7.4.1": {"path": {'Linux': '/usr/share/bazel-7.4.1/bin',
                            'Windows': 'C:/tools/bazel/7.4.1',
-                           'Darwin': '/Users/runner/Applications/bazel/7.4.1'}},
+                           'Darwin': '/Users/runner/Applications/bazel/7.4.1'},
+                  "env": {"USE_BAZEL_VERSION": "7.4.1"}},
         "8.0.0": {"path": {'Linux': '/usr/share/bazel-8.0.0/bin',
                            'Windows': 'C:/tools/bazel/8.0.0',
-                           'Darwin': '/Users/runner/Applications/bazel/8.0.0'}},
+                           'Darwin': '/Users/runner/Applications/bazel/8.0.0'},
+                  "env": {"USE_BAZEL_VERSION": "8.0.0"}},
     },
     'premake': {
         "exe": "premake5",
@@ -272,16 +275,20 @@ def _get_individual_tool(name, version):
         if tool_path == "skip-tests":
             return False
         elif tool_path is not None and not os.path.isdir(tool_path):
-            return True
+            # The configured location is missing, but the tool may still be installed
+            # and available on PATH. Fall back to the executable discovery below.
+            tool_path = None
     else:
         if version is not None:  # if the version is specified, it should be in the conf
             return True
         tool_path = None
 
     try:
-        tool_env = tools_environments[name][tool_platform]
+        tool_env = dict(tools_environments[name][tool_platform])
     except KeyError:
-        tool_env = None
+        tool_env = {}
+    tool_env.update(tool_version.get("env", {}) if tool_version else {})
+    tool_env = tool_env or None
 
     cached = tool_path, tool_env
 
@@ -294,10 +301,7 @@ def _get_individual_tool(name, version):
     exe_found = which(exe)  # TODO: This which doesn't detect version either
     exe_path = str(pathlib.Path(exe_found).parent) if exe_found else None
     if not exe_found:
-        cached = True
-        if tool_path is None:
-            # will fail the test, not exe found and path None
-            cached = True
+        cached = False
     elif tool_path is not None and tool_path not in exe_found:
         # finds the exe in a path that is not the one set in the conf -> fail
         cached = True

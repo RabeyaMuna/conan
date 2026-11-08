@@ -37,14 +37,7 @@ class {{package_name}}Recipe(ConanFile):
                               "but it will be overridden by the 'bazel_7_lib' template "
                               "(Bazel >= 7.1 compatible).", warn_tag="deprecated")
         bazel = Bazel(self)
-        # On Linux platforms, Bazel creates both shared and static libraries by default, and
-        # it is getting naming conflicts if we use the cc_shared_library rule
-        if self.options.shared and self.settings.os != "Linux":
-            # We need to add '--experimental_cc_shared_library' because the project uses
-            # cc_shared_library to create shared libraries
-            bazel.build(args=["--experimental_cc_shared_library"], target="//main:{{name}}_shared")
-        else:
-            bazel.build(target="//main:{{name}}")
+        bazel.build(target="//main:{{name}}")
 
     def package(self):
         dest_lib = os.path.join(self.package_folder, "lib")
@@ -62,10 +55,7 @@ class {{package_name}}Recipe(ConanFile):
              os.path.join(self.package_folder, "include"), keep_path=False)
 
     def package_info(self):
-        if self.options.shared and self.settings.os != "Linux":
-            self.cpp_info.libs = ["{{name}}_shared"]
-        else:
-            self.cpp_info.libs = ["{{name}}"]
+        self.cpp_info.libs = ["{{name}}"]
 """
 
 
@@ -114,14 +104,6 @@ cc_library(
 )
 """
 
-_bazel_build_shared = """
-cc_shared_library(
-    name = "{{name}}_shared",
-    shared_lib_name = "lib{{name}}_shared.%s",
-    deps = [":{{name}}"],
-)
-"""
-
 _bazel_workspace = " "  # Important not empty, so template doesn't discard it
 _bazel_rc = """\
 {% if output_root_dir is defined %}startup --output_user_root={{output_root_dir}}{% endif %}
@@ -133,12 +115,7 @@ load_conan_dependencies()
 
 
 def _get_bazel_build():
-    import platform
-    os_ = platform.system()
-    ret = _bazel_build
-    if os_ != "Linux":
-        ret += _bazel_build_shared % ("dylib" if os_ == "Darwin" else "dll")
-    return ret
+    return _bazel_build
 
 
 bazel_lib_files = {"conanfile.py": conanfile_sources_v2,
