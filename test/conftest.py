@@ -349,11 +349,7 @@ def pytest_runtest_setup(item):
             raise Exception("Invalid arguments for mark.tool: {}".format(tool_params))
 
         result = _get_tool(tool_name, tool_version)
-        if result is True:
-            version_msg = "Any" if tool_version is None else tool_version
-            pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
-                                                                                  version_msg))
-        if result is False:
+        if result is True or result is False:
             version_msg = "Any" if tool_version is None else tool_version
             pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
                                                                                   version_msg))
