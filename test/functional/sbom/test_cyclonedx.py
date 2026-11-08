@@ -383,5 +383,7 @@ class TestCyclonedx:
         content = tc.load(cyclone_path)
         content_json = json.loads(content)
 
-        assert content_json["components"][0]["bom-ref"].split("?user=")[1] == f"{user}?channel={channel}" if channel else user
-        assert content_json["dependencies"][0]["dependsOn"][0].split("?user=")[1] == f"{user_dep}?channel={channel_dep}" if channel_dep else user_dep
+        expected_user = f"{user}&channel={channel}" if channel else user
+        expected_user_dep = f"{user_dep}&channel={channel_dep}" if channel_dep else user_dep
+        assert content_json["components"][0]["bom-ref"].split("&user=")[1] == expected_user
+        assert content_json["dependencies"][0]["dependsOn"][0].split("&user=")[1] == expected_user_dep
