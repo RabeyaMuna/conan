@@ -263,6 +263,10 @@ class _ConfValue:
                 new_value = other._value.copy()
                 new_value.update(self._value)
                 self._value = new_value
+        elif issubclass(v_type, numbers.Number) and issubclass(o_type, numbers.Number):
+            # int and float values are compatible scalar definitions. The higher-priority value
+            # in self is kept, as with other scalar definitions.
+            pass
         elif self._value is None or other._value is None:
             # It means any of those values were an "unset" so doing nothing because we don't
             # really know the original value type
@@ -555,8 +559,16 @@ class ConfDefinition:
         Get the value of the conf name requested and convert it to the [type]-like passed.
         """
         pattern, name = self._split_pattern_name(conf_name)
-        return self._pattern_confs.get(pattern, Conf()).get(name, default=default,
-                                                            check_type=check_type, choices=choices)
+        conf = self._pattern_confs.get(pattern, Conf())
+        try:
+            return conf.get(name, default=default, check_type=check_type, choices=choices)
+        except ConanException:
+            # Backward compatible shorthand for pattern-qualified user confs, e.g.
+            # "pkg/*:version:value" resolving a stored "pkg/*:user.version:value".
+            matches = [conf_key for conf_key in conf._values if conf_key.endswith(f".{name}")]
+            if len(matches) == 1:
+                return conf.get(matches[0], default=default, check_type=check_type, choices=choices)
+            raise
 
     def show(self, fnpattern):
         """
