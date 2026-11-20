@@ -165,6 +165,7 @@ tools_locations = {
                            'Darwin': '/Users/runner/Applications/bazel/8.0.0'}},
     },
     'premake': {
+        "platform": "Linux",
         "exe": "premake5",
         "default": "5.0.0",
         "5.0.0": {
@@ -184,6 +185,7 @@ tools_locations = {
         }
     },
     "qbs": {
+        "platform": "Linux",
         "exe": "qbs",
         "default": "2.6.0",
         "2.6.0": {
@@ -272,7 +274,7 @@ def _get_individual_tool(name, version):
         if tool_path == "skip-tests":
             return False
         elif tool_path is not None and not os.path.isdir(tool_path):
-            return True
+            tool_path = None
     else:
         if version is not None:  # if the version is specified, it should be in the conf
             return True
