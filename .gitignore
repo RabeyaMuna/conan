@@ -111,3 +111,8 @@ Session.vim
 !conan/tools/build
 !test/unittests/client/build
 !test/unittests/tools/build
+# Shell redirection artifacts
+=[0-9]*
+>[0-9]*
+*.tmp
+*.log
