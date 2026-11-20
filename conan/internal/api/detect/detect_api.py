@@ -347,6 +347,11 @@ def detect_cppstd(compiler, compiler_version):
     return cppstd
 
 
+def detect_cstd(compiler, compiler_version):
+    cstd = default_cstd(compiler, compiler_version)
+    return cstd
+
+
 def default_cstd(compiler, compiler_version):
     """returns the default cstd for the compiler-version. This is not detected, just the default"""
 
