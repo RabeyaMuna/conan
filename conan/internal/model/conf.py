@@ -267,6 +267,9 @@ class _ConfValue:
             # It means any of those values were an "unset" so doing nothing because we don't
             # really know the original value type
             pass
+        elif v_type in (int, float) and o_type in (int, float):
+            # Both are numeric types, the higher priority value (self) remains
+            pass
         elif o_type != v_type:
             raise ConanException("It's not possible to compose {} values "
                                  "and {} ones.".format(v_type.__name__, o_type.__name__))
