@@ -70,27 +70,27 @@ tools_locations = {
         "3.15": {
             "path": {'Windows': 'C:/tools/cmake/3.15.7/cmake-3.15.7-win64-x64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.15.7/bin',
-                     'Linux': '/usr/share/cmake-3.15.7/bin'}
+                     'Linux': '/usr/bin'}
         },
         "3.19": {
             "path": {'Windows': 'C:/tools/cmake/3.19.7/cmake-3.19.7-win64-x64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.19.7/bin',
-                     'Linux': '/usr/share/cmake-3.19.7/bin'}
+                     'Linux': '/usr/bin'}
         },
         "3.23": {
             "path": {'Windows': 'C:/tools/cmake/3.23.5/cmake-3.23.5-windows-x86_64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.23.5/bin',
-                     'Linux': "/usr/share/cmake-3.23.5/bin"}
+                     'Linux': "/usr/bin"}
         },
         "3.27": {
             "path": {'Windows': 'C:/tools/cmake/3.27.9/cmake-3.27.9-windows-x86_64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.27.9/bin',
-                     'Linux': "/usr/share/cmake-3.27.9/bin"}
+                     'Linux': "/usr/bin"}
         },
         "4.0": {
             "path": {'Windows': 'C:/tools/cmake/4.0.0-rc3/cmake-4.0.0-rc3-windows-x86_64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/4.0.0-rc3/bin',
-                     'Linux': "/usr/share/cmake-4.0.0-rc3/bin"}
+                     'Linux': "/usr/bin"}
         }
     },
     'ninja': {
@@ -154,13 +154,13 @@ tools_locations = {
     },
     'bazel': {
         "default": "7",
-        "6.5.0": {"path": {'Linux': '/usr/share/bazel-6.5.0/bin',
+        "6.5.0": {"path": {'Linux': '/usr/bin',
                            'Windows': 'C:/tools/bazel/6.5.0',
                            'Darwin': '/Users/runner/Applications/bazel/6.5.0'}},
-        "7.4.1": {"path": {'Linux': '/usr/share/bazel-7.4.1/bin',
+        "7.4.1": {"path": {'Linux': '/usr/bin',
                            'Windows': 'C:/tools/bazel/7.4.1',
                            'Darwin': '/Users/runner/Applications/bazel/7.4.1'}},
-        "8.0.0": {"path": {'Linux': '/usr/share/bazel-8.0.0/bin',
+        "8.0.0": {"path": {'Linux': '/usr/bin',
                            'Windows': 'C:/tools/bazel/8.0.0',
                            'Darwin': '/Users/runner/Applications/bazel/8.0.0'}},
     },
@@ -168,7 +168,7 @@ tools_locations = {
         "exe": "premake5",
         "default": "5.0.0",
         "5.0.0": {
-            "path": {'Linux': '/usr/share/premake'}
+            "path": {'Linux': '/usr/bin'}
         }
     },
     'xcodegen': {"platform": "Darwin"},
