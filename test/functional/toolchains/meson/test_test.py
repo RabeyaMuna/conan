@@ -8,6 +8,7 @@ from test.functional.toolchains.meson._base import TestMesonBase
 
 
 @pytest.mark.tool("pkg_config")
+@pytest.mark.tool("cmake")
 class MesonTest(TestMesonBase):
     _test_package_meson_build = textwrap.dedent("""
         project('test_package', 'cpp')

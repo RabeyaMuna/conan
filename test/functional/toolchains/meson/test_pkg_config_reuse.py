@@ -8,6 +8,7 @@ from test.functional.toolchains.meson._base import TestMesonBase
 
 
 @pytest.mark.tool("pkg_config")
+@pytest.mark.tool("cmake")
 class MesonPkgConfigTest(TestMesonBase):
     _conanfile_py = textwrap.dedent("""
     from conan import ConanFile

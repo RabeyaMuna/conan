@@ -1403,6 +1403,7 @@ def test_add_cmakeexe_to_presets():
     """)
 
     cmake_exe = "cmake.exe" if platform.system() == "Windows" else "cmake"
+    assert os.path.exists(cmake_exe), f"CMake executable '{cmake_exe}' not found"
 
     c.save({"tool.py": tool.format(cmake_exe),
             "conanfile.txt": consumer,
@@ -1795,6 +1796,7 @@ def test_thread_flags(threads, flags):
         compiler.version=4.0.10
         os=Emscripten
         """)
+    assert os.path.exists("emcc"), "emcc compiler not found"
     client.save(
         {
             "conanfile.py": GenConanfile("pkg", "1.0")
