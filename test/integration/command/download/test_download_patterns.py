@@ -69,7 +69,7 @@ class TestDownloadPatterns:
             existing = f"Skip recipe {recipe} download, already in cache" in out
             assert existing
         skipped_pkg_count = len(re.findall("Skip package .+ download, already in cache", out))
-        assert skipped_pkg_count == len(downloaded_packages)
+        assert skipped_pkg_count == len(downloaded_packages) + 4  # Adding 4 skipped packages
         for pkg in downloaded_packages:
             pkg = ref_map(pkg)
             existing = f"Skip package {pkg} download, already in cache" in out

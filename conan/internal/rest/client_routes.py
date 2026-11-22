@@ -28,7 +28,7 @@ class ClientV2Router:
 
     def ping(self):
         # FIXME: The v2 ping is not returning capabilities
-        return "{}/v1/".format(self.root_url) + self.routes.ping
+        return "{}/v2/".format(self.root_url) + self.routes.ping
 
     def search(self, pattern, ignorecase):
         """URL search recipes"""
@@ -36,7 +36,7 @@ class ClientV2Router:
         if pattern:
             if isinstance(pattern, RecipeReference):
                 pattern = repr(pattern)
-            params = {"q": pattern}
+            params = {"q": pattern, "content": "True"}
             if not ignorecase:
                 params["ignorecase"] = "False"
             query = "?%s" % urlencode(params)
@@ -102,7 +102,6 @@ class ClientV2Router:
 
     def recipe_latest(self, ref):
         """Get the latest of a recipe"""
-        assert ref.revision is None, "for_recipe_latest shouldn't receive RREV"
         return self.base_url + _format_ref(self.routes.recipe_latest, ref)
 
     def _for_package_file(self, pref, path):

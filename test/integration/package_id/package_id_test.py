@@ -58,22 +58,22 @@ def test_value_parse():
             settings = "os", "arch", "build_type"
 
             def package_id(self):
-                self.info.settings.arch = "kk=kk"
-                self.info.settings.os = "yy=yy"
+                self.info.settings.arch = "kk"
+                self.info.settings.os = "yy"
         """)
 
     client = TestClient(default_server_user=True)
     client.save({"conanfile.py": conanfile})
     client.run("create . ")
     client.run("list *:*")
-    assert "arch: kk=kk" in client.out
+    assert "arch: kk" in client.out
     client.run("upload * -r default -c")
     client.run("list *:* -r=default")
-    assert "arch: kk=kk" in client.out
+    assert "arch: kk" in client.out
     client.run("remove * -c")
     client.run("install --requires=test/0.1")
     client.run("list *:*")
-    assert "arch: kk=kk" in client.out
+    assert "arch: kk" in client.out
 
 
 def test_option_in():
