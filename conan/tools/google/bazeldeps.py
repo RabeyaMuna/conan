@@ -202,7 +202,7 @@ class _BazelDepBuildGenerator:
         cflags = [var.replace('"', '\\"') for var in cpp_info.cflags]
         return [f'"{flag}"' for flag in (cxxflags + cflags)]
 
-    def _relativize_path(self, path):
+    def relativize_path(self, path):
         """
         Returns a relative path with regard to the package folder.
 
