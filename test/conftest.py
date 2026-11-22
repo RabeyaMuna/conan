@@ -160,6 +160,9 @@ tools_locations = {
         "7.4.1": {"path": {'Linux': '/usr/share/bazel-7.4.1/bin',
                            'Windows': 'C:/tools/bazel/7.4.1',
                            'Darwin': '/Users/runner/Applications/bazel/7.4.1'}},
+        "7.0.0": {"path": {'Linux': '/usr/share/bazel-7.0.0/bin',
+                           'Windows': 'C:/tools/bazel/7.0.0',
+                           'Darwin': '/Users/runner/Applications/bazel/7.0.0'}},
         "8.0.0": {"path": {'Linux': '/usr/share/bazel-8.0.0/bin',
                            'Windows': 'C:/tools/bazel/8.0.0',
                            'Darwin': '/Users/runner/Applications/bazel/8.0.0'}},
@@ -168,7 +171,7 @@ tools_locations = {
         "exe": "premake5",
         "default": "5.0.0",
         "5.0.0": {
-            "path": {'Linux': '/usr/share/premake'}
+            "path": {'Linux': '/usr/share/premake', 'Windows': 'C:/tools/premake', 'Darwin': '/usr/local/premake'}
         }
     },
     'xcodegen': {"platform": "Darwin"},
@@ -187,10 +190,15 @@ tools_locations = {
         "exe": "qbs",
         "default": "2.6.0",
         "2.6.0": {
-            "path": {'Linux': '/usr/share/qbs/bin'}
+            "path": {'Linux': '/usr/share/qbs/bin', 'Windows': 'C:/tools/qbs/bin', 'Darwin': '/usr/local/qbs/bin'}
         }
     },
-    "emcc": {},
+    "emcc": {
+        "default": "3.1.0",
+        "3.1.0": {
+            "path": {'Linux': '/usr/share/emscripten', 'Windows': 'C:/tools/emscripten', 'Darwin': '/usr/local/emscripten'}
+        }
+    },
     "node": {},
     # TODO: Intel oneAPI is not installed in CI yet. Uncomment this line whenever it's done.
     # "intel_oneapi": {
