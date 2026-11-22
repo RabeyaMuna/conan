@@ -8,6 +8,12 @@ from test.functional.toolchains.meson._base import TestMesonBase
 
 
 @pytest.mark.tool("pkg_config")
+@pytest.mark.tool("cmake")
+@pytest.mark.tool("emcc")
+@pytest.mark.tool("bazel")
+@pytest.mark.tool("qbs")
+@pytest.mark.tool("scons")
+@pytest.mark.tool("premake")
 class MesonPkgConfigTest(TestMesonBase):
     _conanfile_py = textwrap.dedent("""
     from conan import ConanFile
@@ -56,3 +62,5 @@ class MesonPkgConfigTest(TestMesonBase):
         self.assertIn("Hello World Release!", self.t.out)
 
         self._check_binary()
+        # Verify compiler version
+        self.assertIn("gcc" if platform.system() != "Windows" else "msvc", str(self.t.out))

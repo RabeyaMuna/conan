@@ -3,6 +3,9 @@ import textwrap
 
 from conan.test.assets.sources import gen_function_cpp, gen_function_h
 from test.functional.toolchains.meson._base import TestMesonBase
+from conan.tools.meson import Meson
+from conan.tools.cmake import CMake
+from conan.tools.gnu import Autotools
 
 
 class MesonPreprocessorDefinitionsTest(TestMesonBase):
