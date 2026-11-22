@@ -8,6 +8,8 @@ from test.functional.toolchains.meson._base import TestMesonBase
 
 
 @pytest.mark.tool("pkg_config")
+@pytest.mark.tool("cmake")
+@pytest.mark.tool("gcc")
 class MesonPkgConfigTest(TestMesonBase):
     _conanfile_py = textwrap.dedent("""
     from conan import ConanFile
@@ -50,7 +52,7 @@ class MesonPkgConfigTest(TestMesonBase):
                     clean_first=True)
 
         # Build in the cache
-        self.t.run("build .")
+        self.t.run("build .", env={"CONAN_CMAKE_GENERATOR": "Unix Makefiles"})
         self.t.run_command(os.path.join("build", "demo"))
 
         self.assertIn("Hello World Release!", self.t.out)
