@@ -66,5 +66,6 @@ class MesonPreprocessorDefinitionsTest(TestMesonBase):
         self.assertIn("hello: Release!", self.t.out)
         self.assertIn("TEST_DEFINITION1: TestPpdValue1", self.t.out)
         self.assertIn("TEST_DEFINITION2: TestPpdValue2", self.t.out)
+        self.assertIn("main __GNUC__9", self.t.out)
 
         self._check_binary()
