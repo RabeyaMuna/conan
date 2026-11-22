@@ -4,6 +4,8 @@ import textwrap
 from conan.test.utils.tools import TestClient
 
 
+from conan.test.utils.tools import GenConanfile
+
 def test_inject_generators_conf():
     tc = TestClient(light=True)
     tc.save({"tool/conanfile.py": textwrap.dedent("""
