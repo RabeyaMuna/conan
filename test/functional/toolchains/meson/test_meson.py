@@ -48,7 +48,7 @@ class MesonToolchainTest(TestMesonBase):
                 tc.project_options["DYNAMIC"] = self.options.shared
                 # This one will fail because HELLO_MSG = Hi everyone is an invalid value
                 # The good one should be HELLO_MSG = "Hi everyone"
-                tc.project_options["HELLO_MSG"] = {msg}
+                tc.project_options["HELLO_MSG"] = "\"" + str(self.options.msg) + "\""
                 tc.generate()
 
             def build(self):

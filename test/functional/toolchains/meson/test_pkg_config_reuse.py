@@ -8,6 +8,7 @@ from test.functional.toolchains.meson._base import TestMesonBase
 
 
 @pytest.mark.tool("pkg_config")
+@pytest.mark.tool("cmake")
 class MesonPkgConfigTest(TestMesonBase):
     _conanfile_py = textwrap.dedent("""
     from conan import ConanFile
@@ -54,5 +55,6 @@ class MesonPkgConfigTest(TestMesonBase):
         self.t.run_command(os.path.join("build", "demo"))
 
         self.assertIn("Hello World Release!", self.t.out)
+        self.assertIn("__GNUC__9", self.t.out)
 
         self._check_binary()
