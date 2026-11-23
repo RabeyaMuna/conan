@@ -6,9 +6,10 @@ import pytest
 from conan.test.utils.tools import TestClient
 
 
-@pytest.mark.skipif(platform.system() != "Linux", reason="SCons functional tests"
-                                                         "only for Linux")
-@pytest.mark.tool("scons")
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="SCons functional testsonly for Linux"
+)
+@pytest.mark.tool("scons", "Any")
 def test_sconsdeps():
     client = TestClient(path_with_spaces=False)
 
@@ -165,16 +166,19 @@ def test_sconsdeps():
         }
         """)
 
-    client.save({"conanfile.py": conanfile,
-                 "src/hello.cpp": hello_cpp,
-                 "src/hello.h": hello_h,
-                 "src/SConscript": sconscript,
-                 "src/SConstruct": sconstruct,
-                 "test_package/SConscript": t_sconscript,
-                 "test_package/SConstruct": t_sconstruct,
-                 "test_package/conanfile.py": t_conanfile,
-                 "test_package/main.cpp": t_main_cpp,
-                 })
+    client.save(
+        {
+            "conanfile.py": conanfile,
+            "src/hello.cpp": hello_cpp,
+            "src/hello.h": hello_h,
+            "src/SConscript": sconscript,
+            "src/SConstruct": sconstruct,
+            "test_package/SConscript": t_sconscript,
+            "test_package/SConstruct": t_sconstruct,
+            "test_package/conanfile.py": t_conanfile,
+            "test_package/main.cpp": t_main_cpp,
+        }
+    )
 
     client.run("create .")
     assert "Hello World Release!" in client.out

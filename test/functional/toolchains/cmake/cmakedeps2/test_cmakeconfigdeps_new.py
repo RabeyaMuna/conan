@@ -6,9 +6,8 @@ import textwrap
 import pytest
 
 from conan.test.assets.genconanfile import GenConanfile
-from conan.test.assets.sources import gen_function_h, gen_function_cpp
+from conan.test.assets.sources import gen_function_cpp, gen_function_h
 from conan.test.utils.tools import TestClient
-
 
 new_value = "will_break_next"
 
@@ -55,8 +54,7 @@ class TestExes:
             """)
         c = TestClient()
         c.run("new cmake_exe -d name=mytool -d version=0.1")
-        c.save({"conanfile.py": conanfile,
-                "src/main.cpp": main})
+        c.save({"conanfile.py": conanfile, "src/main.cpp": main})
         c.run("create .")
 
         requires = "tool_requires" if tool_requires else "requires"
@@ -90,8 +88,7 @@ class TestExes:
             add_custom_command(OUTPUT out.c COMMAND MyTool::myexe)
             add_library(myLib out.c)
             """)
-        c.save({"conanfile.py": consumer,
-                "CMakeLists.txt": cmake}, clean_first=True)
+        c.save({"conanfile.py": consumer, "CMakeLists.txt": cmake}, clean_first=True)
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
         assert "find_package(mytool)" in c.out
         assert "target_link_libraries(..." not in c.out
@@ -151,11 +148,14 @@ class TestExes:
             install(TARGETS mytool2 DESTINATION "." RUNTIME DESTINATION bin)
             """)
         c = TestClient()
-        c.save({"conanfile.py": conanfile,
+        c.save(
+            {
+                "conanfile.py": conanfile,
                 "CMakeLists.txt": cmake,
                 "src/main1.cpp": main.format(number=1),
-                "src/main2.cpp": main.format(number=2)
-                })
+                "src/main2.cpp": main.format(number=2),
+            }
+        )
         c.run("create .")
 
         consumer = textwrap.dedent("""
@@ -188,8 +188,7 @@ class TestExes:
             add_custom_command(OUTPUT out2.c COMMAND MyTool::my2exe)
             add_library(myLib out1.c out2.c)
             """)
-        c.save({"conanfile.py": consumer,
-                "CMakeLists.txt": cmake}, clean_first=True)
+        c.save({"conanfile.py": consumer, "CMakeLists.txt": cmake}, clean_first=True)
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
         assert "Conan: Target declared imported executable 'MyTool::my1exe'" in c.out
         assert "Mytool1 generating out1.c!!!!!" in c.out
@@ -205,7 +204,9 @@ class TestLibs:
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
         assert "find_package(matrix)" in c.out
         assert "target_link_libraries(... matrix::matrix)" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::matrix'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::matrix'" in c.out
+        )
 
     @pytest.mark.parametrize("shared", [False, True])
     def test_libs_transitive(self, transitive_libraries, shared):
@@ -216,14 +217,25 @@ class TestLibs:
         assert "find_package(engine)" in c.out
         assert "target_link_libraries(... engine::engine)" in c.out
         if shared:
-            assert "matrix::matrix" not in c.out  # It is hidden as static behind the engine
-            assert "Conan: Target declared imported SHARED library 'engine::engine'" in c.out
+            assert (
+                "matrix::matrix" not in c.out
+            )  # It is hidden as static behind the engine
+            assert (
+                "Conan: Target declared imported SHARED library 'engine::engine'"
+                in c.out
+            )
         else:
-            assert "Conan: Target declared imported STATIC library 'matrix::matrix'" in c.out
-            assert "Conan: Target declared imported STATIC library 'engine::engine'" in c.out
+            assert (
+                "Conan: Target declared imported STATIC library 'matrix::matrix'"
+                in c.out
+            )
+            assert (
+                "Conan: Target declared imported STATIC library 'engine::engine'"
+                in c.out
+            )
 
     # if not using cmake >= 3.23 the intermediate gamelib_test linkage fail
-    @pytest.mark.tool("cmake", "3.27")
+    @pytest.mark.tool("cmake", "3.15")
     @pytest.mark.parametrize("shared", [False, True])
     def test_multilevel(self, shared):
         # TODO: make this shared fixtures in conftest for multi-level shared testing
@@ -259,8 +271,12 @@ class TestLibs:
             """)
         # Testing that a local test executable links correctly with the new CMakeDeps
         # It fails with the old CMakeDeps
-        c.save({"CMakeLists.txt": cmake,
-               "src/gamelib_test.cpp": '#include "gamelib.h"\nint main() { gamelib(); }'})
+        c.save(
+            {
+                "CMakeLists.txt": cmake,
+                "src/gamelib_test.cpp": '#include "gamelib.h"\nint main() { gamelib(); }',
+            }
+        )
         c.run(f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value}")
 
         c.save({}, clean_first=True)
@@ -277,8 +293,10 @@ class TestLibs:
         for header in ("matrix", "engine"):
             new_game_cpp = f"#include <{header}.h>\n" + game_cpp
             c.save({"src/game.cpp": new_game_cpp})
-            c.run(f"build . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value}",
-                  assert_error=True)
+            c.run(
+                f"build . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value}",
+                assert_error=True,
+            )
             assert f"{header}.h" in c.out
 
         # Make sure it works downloading to another cache
@@ -287,7 +305,9 @@ class TestLibs:
 
         c2 = TestClient(servers=c.servers)
         c2.run("new cmake_exe -d name=game -d version=0.1 -d requires=gamelib/0.1")
-        c2.run(f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value}")
+        c2.run(
+            f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value}"
+        )
 
         assert "matrix/0.1: Hello World Release!"
         assert "engine/0.1: Hello World Release!"
@@ -310,15 +330,24 @@ class TestLibsIntegration:
                     self.cpp_info.libs = ["dep"]
             """)
 
-        c.save({"dep/conanfile.py": dep,
-                "app/conanfile.py": GenConanfile().with_requires("dep/0.1")
-                                                  .with_settings("build_type")})
+        c.save(
+            {
+                "dep/conanfile.py": dep,
+                "app/conanfile.py": GenConanfile()
+                .with_requires("dep/0.1")
+                .with_settings("build_type"),
+            }
+        )
 
         c.run("create dep")
-        c.run(f"install app -c tools.cmake.cmakedeps:new={new_value} -g CMakeDeps",
-              assert_error=True)
-        assert "ERROR: Error in generator 'CMakeDeps': dep/0.1: Cannot obtain 'location' " \
-               "for library 'dep'" in c.out
+        c.run(
+            f"install app -c tools.cmake.cmakedeps:new={new_value} -g CMakeDeps",
+            assert_error=True,
+        )
+        assert (
+            "ERROR: Error in generator 'CMakeDeps': dep/0.1: Cannot obtain 'location' "
+            "for library 'dep'" in c.out
+        )
 
     def test_custom_file_targetname(self):
         # Integration test
@@ -334,18 +363,25 @@ class TestLibsIntegration:
                     self.cpp_info.set_property("cmake_target_name", "MyTargetDep")
                 """)
 
-        c.save({"dep/conanfile.py": dep,
+        c.save(
+            {
+                "dep/conanfile.py": dep,
                 "pkg/conanfile.py": GenConanfile("pkg", "0.1").with_requires("dep/0.1"),
-                "app/conanfile.py": GenConanfile().with_requires("pkg/0.1")
-               .with_settings("build_type")})
+                "app/conanfile.py": GenConanfile()
+                .with_requires("pkg/0.1")
+                .with_settings("build_type"),
+            }
+        )
 
         c.run("create dep")
         c.run("create pkg")
         c.run(f"install app -c tools.cmake.cmakedeps:new={new_value} -g CMakeDeps")
         targets_cmake = c.load("app/pkg-Targets-release.cmake")
         assert "find_dependency(MyDep REQUIRED CONFIG)" in targets_cmake
-        assert 'set_property(TARGET pkg::pkg APPEND PROPERTY INTERFACE_LINK_LIBRARIES\n' \
-               '             "$<$<CONFIG:RELEASE>:MyTargetDep>")' in targets_cmake
+        assert (
+            "set_property(TARGET pkg::pkg APPEND PROPERTY INTERFACE_LINK_LIBRARIES\n"
+            '             "$<$<CONFIG:RELEASE>:MyTargetDep>")' in targets_cmake
+        )
 
 
 class TestLibsLinkageTraits:
@@ -359,12 +395,16 @@ class TestLibsLinkageTraits:
 
         c.save({}, clean_first=True)
         c.run("new cmake_lib -d name=engine -d version=0.1 -d requires=matrix/0.1")
-        c.run(f"create . -o engine/*:shared=True -c tools.cmake.cmakedeps:new={new_value} -tf=")
+        c.run(
+            f"create . -o engine/*:shared=True -c tools.cmake.cmakedeps:new={new_value} -tf="
+        )
 
         c.save({}, clean_first=True)
         c.run("new cmake_exe -d name=game -d version=0.1 -d requires=engine/0.1")
-        c.run(f"create . -o engine/*:shared=True -c tools.cmake.cmakedeps:new={new_value} "
-              "-c tools.compilation:verbosity=verbose")
+        c.run(
+            f"create . -o engine/*:shared=True -c tools.cmake.cmakedeps:new={new_value} "
+            "-c tools.compilation:verbosity=verbose"
+        )
         assert re.search(r"Skipped binaries(\s*)matrix/0.1", c.out)
         assert "matrix/0.1: Hello World Release!"
         assert "engine/0.1: Hello World Release!"
@@ -375,7 +415,9 @@ class TestLibsLinkageTraits:
     def test_transitive_headers(self, shared):
         c = TestClient()
         c.run("new cmake_lib -d name=matrix -d version=0.1")
-        c.run(f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value} -tf=")
+        c.run(
+            f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value} -tf="
+        )
 
         c.save({}, clean_first=True)
         c.run("new cmake_lib -d name=engine -d version=0.1 -d requires=matrix/0.1")
@@ -383,10 +425,14 @@ class TestLibsLinkageTraits:
         engine_h = "#include <matrix.h>\n" + engine_h
         c.save({"include/engine.h": engine_h})
         conanfile = c.load("conanfile.py")
-        conanfile = conanfile.replace('self.requires("matrix/0.1")',
-                                      'self.requires("matrix/0.1", transitive_headers=True)')
+        conanfile = conanfile.replace(
+            'self.requires("matrix/0.1")',
+            'self.requires("matrix/0.1", transitive_headers=True)',
+        )
         c.save({"conanfile.py": conanfile})
-        c.run(f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value} -tf=")
+        c.run(
+            f"create . -o *:shared={shared} -c tools.cmake.cmakedeps:new={new_value} -tf="
+        )
 
         c.save({}, clean_first=True)
         c.run("new cmake_exe -d name=game -d version=0.1 -d requires=engine/0.1")
@@ -420,13 +466,16 @@ class TestLibsComponents:
             #include "headers.h"
             int main() { module(); headers();}
             """)
-        c.save({"CMakeLists.txt": cmake,
-                "src/app.cpp": app_cpp})
+        c.save({"CMakeLists.txt": cmake, "src/app.cpp": app_cpp})
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
         assert "find_package(matrix)" in c.out
         assert "target_link_libraries(... matrix::matrix)" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        )
         if platform.system() == "Windows":
             c.run_command(r".\build\Release\app.exe")
             assert "Matrix headers __cplusplus: __cplusplus2014" in c.out
@@ -453,12 +502,17 @@ class TestLibsComponents:
             add_executable(app src/app.cpp)
             target_link_libraries(app PRIVATE matrix::matrix)
             """)
-        c.save({"src/app.cpp": app_cpp,
-                "CMakeLists.txt": cmake})
+        c.save({"src/app.cpp": app_cpp, "CMakeLists.txt": cmake})
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
-        assert "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'MatrixHeaders'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported INTERFACE library 'MatrixHeaders'" in c.out
+        )
 
     def test_libs_components_default_error(self, matrix_client_components):
         """
@@ -483,12 +537,15 @@ class TestLibsComponents:
             add_executable(app src/app.cpp)
             target_link_libraries(app PRIVATE matrix::matrix)
             """)
-        c.save({"src/app.cpp": app_cpp,
-                "CMakeLists.txt": cmake})
+        c.save({"src/app.cpp": app_cpp, "CMakeLists.txt": cmake})
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}", assert_error=True)
         assert "Error in build() method, line 35" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        )
         cmake = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
@@ -514,12 +571,19 @@ class TestLibsComponents:
         """
         c = matrix_client_components
         bots_h = gen_function_h(name="bots")
-        bots_cpp = gen_function_cpp(name="bots", includes=["bots", "physix"], calls=["physix"])
+        bots_cpp = gen_function_cpp(
+            name="bots", includes=["bots", "physix"], calls=["physix"]
+        )
         physix_h = gen_function_h(name="physix")
-        physix_cpp = gen_function_cpp(name="physix", includes=["physix", "vector"], calls=["vector"])
+        physix_cpp = gen_function_cpp(
+            name="physix", includes=["physix", "vector"], calls=["vector"]
+        )
         world_h = gen_function_h(name="world")
-        world_cpp = gen_function_cpp(name="world", includes=["world", "physix", "module"],
-                                     calls=["physix", "module"])
+        world_cpp = gen_function_cpp(
+            name="world",
+            includes=["world", "physix", "module"],
+            calls=["physix", "module"],
+        )
 
         conanfile = textwrap.dedent("""
             from conan import ConanFile
@@ -584,14 +648,18 @@ class TestLibsComponents:
                set_target_properties(world PROPERTIES PUBLIC_HEADER "src/world.h")
                install(TARGETS physix bots world)
                """)
-        c.save({"src/physix.h": physix_h,
+        c.save(
+            {
+                "src/physix.h": physix_h,
                 "src/physix.cpp": physix_cpp,
                 "src/bots.h": bots_h,
                 "src/bots.cpp": bots_cpp,
                 "src/world.h": world_h,
                 "src/world.cpp": world_cpp,
                 "CMakeLists.txt": cmakelists,
-                "conanfile.py": conanfile})
+                "conanfile.py": conanfile,
+            }
+        )
         c.run("create .")
 
         c.save({}, clean_first=True)
@@ -613,17 +681,28 @@ class TestLibsComponents:
             #include "bots.h"
             int main() { bots();}
             """)
-        c.save({"CMakeLists.txt": cmake,
-                "src/app.cpp": app_cpp})
+        c.save({"CMakeLists.txt": cmake, "src/app.cpp": app_cpp})
         c.run(f"create . -c tools.cmake.cmakedeps:new={new_value}")
         assert "find_package(MyEngine)" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'matrix::matrix'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::vector'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::module'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported INTERFACE library 'matrix::matrix'"
+            in c.out
+        )
         assert "Conan: Target declared imported STATIC library 'engine::bots'" in c.out
-        assert "Conan: Target declared imported STATIC library 'engine::physix'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'engine::physix'" in c.out
+        )
         assert "Conan: Target declared imported STATIC library 'engine::world'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'engine::engine'" in c.out
+        assert (
+            "Conan: Target declared imported INTERFACE library 'engine::engine'"
+            in c.out
+        )
 
         assert "bots: Release!" in c.out
         assert "physix: Release!" in c.out
@@ -679,12 +758,16 @@ class TestLibsComponents:
             set_target_properties(module PROPERTIES PUBLIC_HEADER "src/module.h")
             install(TARGETS module vector)
             """)
-        c.save({"src/module.h": module_h,
+        c.save(
+            {
+                "src/module.h": module_h,
                 "src/module.cpp": module_cpp,
                 "src/vector.h": vector_h,
                 "src/vector.cpp": vector_cpp,
                 "CMakeLists.txt": cmakelists,
-                "conanfile.py": conanfile})
+                "conanfile.py": conanfile,
+            }
+        )
         c.run("create .")
 
         c.save({}, clean_first=True)
@@ -707,12 +790,18 @@ class TestLibsComponents:
             #include "module.h"
             int main() { vector();module();}
             """)
-        c.save({"CMakeLists.txt": cmake,
-                "src/app.cpp": app_cpp})
+        c.save({"CMakeLists.txt": cmake, "src/app.cpp": app_cpp})
         c.run(f"create . -c tools.cmake.cmakedeps:new={new_value}")
-        assert "Conan: Target declared imported STATIC library 'matrix::_vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::_module'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'MyMatrix::MyMatrix'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::_vector'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::_module'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported INTERFACE library 'MyMatrix::MyMatrix'"
+            in c.out
+        )
         assert "matrix::matrix" not in c.out
 
         assert "vector: Release!" in c.out
@@ -772,12 +861,16 @@ class TestLibsComponents:
             set_target_properties(module PROPERTIES PUBLIC_HEADER "src/module.h")
             install(TARGETS module vector)
             """)
-        c.save({"src/module.h": module_h,
+        c.save(
+            {
+                "src/module.h": module_h,
                 "src/module.cpp": module_cpp,
                 "src/vector.h": vector_h,
                 "src/vector.cpp": vector_cpp,
                 "CMakeLists.txt": cmakelists,
-                "conanfile.py": conanfile})
+                "conanfile.py": conanfile,
+            }
+        )
         c.run("create .")
 
         c.save({}, clean_first=True)
@@ -800,12 +893,20 @@ class TestLibsComponents:
             #include "module.h"
             int main() { vector();module();}
             """)
-        c.save({"CMakeLists.txt": cmake,
-                "src/app.cpp": app_cpp})
+        c.save({"CMakeLists.txt": cmake, "src/app.cpp": app_cpp})
         c.run(f"create . -c tools.cmake.cmakedeps:new={new_value}")
-        assert "Conan: Target declared imported STATIC library 'matrix::_mycomp_vector'" in c.out
-        assert "Conan: Target declared imported STATIC library 'matrix::_mycomp_module'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'MyMatrix::MyMatrix'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::_mycomp_vector'"
+            in c.out
+        )
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::_mycomp_module'"
+            in c.out
+        )
+        assert (
+            "Conan: Target declared imported INTERFACE library 'MyMatrix::MyMatrix'"
+            in c.out
+        )
         assert "matrix::matrix" not in c.out
 
         assert "vector: Release!" in c.out
@@ -858,8 +959,7 @@ class TestHeaders:
             void engine(){ std::cout << "Engine!" <<std::endl; matrix(); }
             """)
 
-        c.save({"conanfile.py": conanfile,
-                "include/engine.h": engine_h})
+        c.save({"conanfile.py": conanfile, "include/engine.h": engine_h})
         c.run("create .")
 
         app = textwrap.dedent("""
@@ -883,13 +983,24 @@ class TestHeaders:
             add_executable(app src/app.cpp)
             target_link_libraries(app PRIVATE engine::engine)
             """)
-        c.save({"conanfile.py": app,
+        c.save(
+            {
+                "conanfile.py": app,
                 "CMakeLists.txt": cmake,
-                "src/app.cpp": gen_function_cpp(name="main", includes=["engine"], calls=["engine"])},
-               clean_first=True)
+                "src/app.cpp": gen_function_cpp(
+                    name="main", includes=["engine"], calls=["engine"]
+                ),
+            },
+            clean_first=True,
+        )
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
-        assert "Conan: Target declared imported STATIC library 'matrix::matrix'" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'engine::engine'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'matrix::matrix'" in c.out
+        )
+        assert (
+            "Conan: Target declared imported INTERFACE library 'engine::engine'"
+            in c.out
+        )
 
     @pytest.mark.skipif(platform.system() != "Windows", reason="Only windows")
     def test_conditional_header(self):
@@ -915,11 +1026,19 @@ class TestHeaders:
             """)
 
         c = TestClient()
-        c.save({"conanfile.py": conanfile.format(version="1_0"),
-                "include/engine.h": engine_h.format(version="1_0")})
+        c.save(
+            {
+                "conanfile.py": conanfile.format(version="1_0"),
+                "include/engine.h": engine_h.format(version="1_0"),
+            }
+        )
         c.run("create . --version=1_0")
-        c.save({"conanfile.py": conanfile.format(version="1_1"),
-                "include/engine.h": engine_h.format(version="1_1")})
+        c.save(
+            {
+                "conanfile.py": conanfile.format(version="1_1"),
+                "include/engine.h": engine_h.format(version="1_1"),
+            }
+        )
         c.run("create . --version=1_1")
 
         app = textwrap.dedent("""
@@ -949,41 +1068,60 @@ class TestHeaders:
             add_executable(app src/app.cpp)
             target_link_libraries(app PRIVATE engine::engine)
             """)
-        c.save({"conanfile.py": app,
+        c.save(
+            {
+                "conanfile.py": app,
                 "CMakeLists.txt": cmake,
-                "src/app.cpp": gen_function_cpp(name="main", includes=["engine"], calls=["engine"])},
-               clean_first=True)
+                "src/app.cpp": gen_function_cpp(
+                    name="main", includes=["engine"], calls=["engine"]
+                ),
+            },
+            clean_first=True,
+        )
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
         assert "engine/1_1" in c.out
         assert "engine/1_0" not in c.out
-        assert "Conan: Target declared imported INTERFACE library 'engine::engine'" in c.out
+        assert (
+            "Conan: Target declared imported INTERFACE library 'engine::engine'"
+            in c.out
+        )
         assert "Engine 1_1!" in c.out
 
         c.run(f"build . -c tools.cmake.cmakedeps:new={new_value} -s build_type=Debug")
         assert "engine/1_1" not in c.out
         assert "engine/1_0" in c.out
-        assert "Conan: Target declared imported INTERFACE library 'engine::engine'" in c.out
+        assert (
+            "Conan: Target declared imported INTERFACE library 'engine::engine'"
+            in c.out
+        )
         assert "Engine 1_0!" in c.out
 
 
 class TestToolRequires:
     def test_tool_requires(self):
-        """ tool-requires should not define the try-compile or global variables
+        """tool-requires should not define the try-compile or global variables
         for includedirs, libraries, definitions, otherwise the build-context would
         override the host context"""
         c = TestClient()
-        c.save({"tool/conanfile.py": GenConanfile("tool", "0.1"),
-                "pkg/conanfile.py": GenConanfile("pkg", "0.1").with_settings("build_type")
-                                                              .with_tool_requires("tool/0.1")})
+        c.save(
+            {
+                "tool/conanfile.py": GenConanfile("tool", "0.1"),
+                "pkg/conanfile.py": GenConanfile("pkg", "0.1")
+                .with_settings("build_type")
+                .with_tool_requires("tool/0.1"),
+            }
+        )
         c.run("create tool")
         c.run(f"install pkg -g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}")
-        assert "find_package(tool) # Optional. This is a tool-require, " \
-               "can't link its targets" in c.out
+        assert (
+            "find_package(tool) # Optional. This is a tool-require, "
+            "can't link its targets" in c.out
+        )
         assert "target_link_libraries" not in c.out
         tool_config = c.load("pkg/tool-config.cmake")
-        assert 'set(tool_INCLUDE_DIRS' not in tool_config
-        assert 'set(tool_INCLUDE_DIR' not in tool_config
-        assert 'set(tool_LIBRARIES' not in tool_config
+        assert "set(tool_INCLUDE_DIRS" not in tool_config
+        assert "set(tool_INCLUDE_DIR" not in tool_config
+        assert "set(tool_LIBRARIES" not in tool_config
 
 
 @pytest.mark.tool("cmake")
@@ -1038,16 +1176,15 @@ def test_build_modules_custom_script(tool_requires):
         find_package(myfunctions CONFIG REQUIRED)
         myfunction()
         """)
-    client.save({"conanfile.py": consumer,
-                 "CMakeLists.txt": cmakelists},
-                clean_first=True)
+    client.save(
+        {"conanfile.py": consumer, "CMakeLists.txt": cmakelists}, clean_first=True
+    )
     client.run(f"build . -c tools.cmake.cmakedeps:new={new_value}")
     assert "Hello myfunction!!!!" in client.out
 
 
 @pytest.mark.tool("cmake")
 class TestProtobuf:
-
     @pytest.fixture()
     def protobuf(self):
         conanfile = textwrap.dedent(r"""
@@ -1111,11 +1248,17 @@ class TestProtobuf:
             install(TARGETS protoc protobuf)
             """)
         c = TestClient()
-        c.save({"conanfile.py": conanfile,
+        c.save(
+            {
+                "conanfile.py": conanfile,
                 "CMakeLists.txt": cmake,
                 "src/protobuf.h": gen_function_h(name="protobuf"),
-                "src/protobuf.cpp": gen_function_cpp(name="protobuf", includes=["protobuf"]),
-                "src/main.cpp": main})
+                "src/protobuf.cpp": gen_function_cpp(
+                    name="protobuf", includes=["protobuf"]
+                ),
+                "src/main.cpp": main,
+            }
+        )
         c.run("export .")
 
         consumer = textwrap.dedent("""
@@ -1157,18 +1300,25 @@ class TestProtobuf:
                 std::cout << "MyApp" << std::endl;
             }
             """)
-        c.save({"conanfile.py": consumer,
-                "CMakeLists.txt": cmake,
-                "myapp.cpp": myapp}, clean_first=True)
+        c.save(
+            {"conanfile.py": consumer, "CMakeLists.txt": cmake, "myapp.cpp": myapp},
+            clean_first=True,
+        )
         return c
 
     def test_requires(self, protobuf):
         c = protobuf
         c.run(f"build . --build=missing -c tools.cmake.cmakedeps:new={new_value}")
-        assert "Conan: Target declared imported STATIC library 'protobuf::protobuf'" in c.out
-        assert "Conan: Target declared imported executable 'Protobuf::Protocompile'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'protobuf::protobuf'"
+            in c.out
+        )
+        assert (
+            "Conan: Target declared imported executable 'Protobuf::Protocompile'"
+            in c.out
+        )
         assert "Protoc RELEASE generating out.c!!!!!" in c.out
-        assert 'Protoc imported configurations: RELEASE!!!' in c.out
+        assert "Protoc imported configurations: RELEASE!!!" in c.out
 
     def test_both(self, protobuf):
         consumer = textwrap.dedent("""
@@ -1190,32 +1340,53 @@ class TestProtobuf:
             """)
         c = protobuf
         c.save({"conanfile.py": consumer})
-        c.run("build . -s:h build_type=Debug --build=missing "
-              f"-c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            "build . -s:h build_type=Debug --build=missing "
+            f"-c tools.cmake.cmakedeps:new={new_value}"
+        )
 
-        assert "Conan: Target declared imported STATIC library 'protobuf::protobuf'" in c.out
-        assert "Conan: Target declared imported executable 'Protobuf::Protocompile'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'protobuf::protobuf'"
+            in c.out
+        )
+        assert (
+            "Conan: Target declared imported executable 'Protobuf::Protocompile'"
+            in c.out
+        )
         assert "Protoc RELEASE generating out.c!!!!!" in c.out
         assert "protobuf: Release!" in c.out
         assert "protobuf: Debug!" not in c.out
-        assert 'Protoc imported configurations: RELEASE!!!' in c.out
+        assert "Protoc imported configurations: RELEASE!!!" in c.out
 
-        cmd = "./build/Debug/myapp" if platform.system() != "Windows" else r"build\Debug\myapp"
+        cmd = (
+            "./build/Debug/myapp"
+            if platform.system() != "Windows"
+            else r"build\Debug\myapp"
+        )
         c.run_command(cmd)
         assert "protobuf: Debug!" in c.out
         assert "protobuf: Release!" not in c.out
 
-        c.run("build . --build=missing "
-              f"-c tools.cmake.cmakedeps:new={new_value}")
+        c.run(f"build . --build=missing -c tools.cmake.cmakedeps:new={new_value}")
 
-        assert "Conan: Target declared imported STATIC library 'protobuf::protobuf'" in c.out
-        assert "Conan: Target declared imported executable 'Protobuf::Protocompile'" in c.out
+        assert (
+            "Conan: Target declared imported STATIC library 'protobuf::protobuf'"
+            in c.out
+        )
+        assert (
+            "Conan: Target declared imported executable 'Protobuf::Protocompile'"
+            in c.out
+        )
         assert "Protoc RELEASE generating out.c!!!!!" in c.out
         assert "protobuf: Release!" in c.out
         assert "protobuf: Debug!" not in c.out
-        assert 'Protoc imported configurations: RELEASE!!!' in c.out
+        assert "Protoc imported configurations: RELEASE!!!" in c.out
 
-        cmd = "./build/Release/myapp" if platform.system() != "Windows" else r"build\Release\myapp"
+        cmd = (
+            "./build/Release/myapp"
+            if platform.system() != "Windows"
+            else r"build\Release\myapp"
+        )
         c.run_command(cmd)
         assert "protobuf: Debug!" not in c.out
         assert "protobuf: Release!" in c.out
@@ -1228,8 +1399,10 @@ class TestConfigs:
         c = matrix_client
         c.run("new cmake_exe -d name=app -d version=0.1 -d requires=matrix/1.0")
         c.run(f"install . -c tools.cmake.cmakedeps:new={new_value}")
-        c.run("install . -s build_type=Debug --build=missing "
-              f"-c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            "install . -s build_type=Debug --build=missing "
+            f"-c tools.cmake.cmakedeps:new={new_value}"
+        )
 
         c.run_command("cmake --preset conan-default")
         c.run_command("cmake --build --preset conan-release")
@@ -1246,7 +1419,9 @@ class TestConfigs:
         # Release dependencies, but compiling app in Debug
         c = matrix_client
         c.run("new cmake_exe -d name=app -d version=0.1 -d requires=matrix/1.0")
-        c.run(f"install . -s &:build_type=Debug -c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            f"install . -s &:build_type=Debug -c tools.cmake.cmakedeps:new={new_value}"
+        )
 
         # With modern CMake > 3.26 not necessary set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
         cmake = textwrap.dedent("""
@@ -1280,10 +1455,18 @@ class TestConfigs:
             void app(){
                module();
             }""")
-        c.save({"src/app.cpp": app_cpp,
-                "src/main.cpp": gen_function_cpp(name="main", includes=["app"], calls=["app"])})
+        c.save(
+            {
+                "src/app.cpp": app_cpp,
+                "src/main.cpp": gen_function_cpp(
+                    name="main", includes=["app"], calls=["app"]
+                ),
+            }
+        )
 
-        c.run(f"install . -s &:build_type=Debug -c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            f"install . -s &:build_type=Debug -c tools.cmake.cmakedeps:new={new_value}"
+        )
         # With modern CMake > 3.26 not necessary set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
         cmake = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
@@ -1307,7 +1490,9 @@ class TestConfigs:
         assert "module: Release!" in c.out
         assert "vector: Release!" in c.out
 
-    @pytest.mark.skipif(platform.system() == "Windows", reason="This doesn't work in MSVC")
+    @pytest.mark.skipif(
+        platform.system() == "Windows", reason="This doesn't work in MSVC"
+    )
     def test_cross_config_implicit(self, matrix_client):
         # Release dependencies, but compiling app in Debug, without specifying it
         c = matrix_client
@@ -1329,8 +1514,10 @@ class TestConfigs:
 
         c.save({"CMakeLists.txt": cmake})
         # Now we can force the Debug build, even if dependencies are Release
-        c.run_command("cmake . -DCMAKE_BUILD_TYPE=Debug -B build "
-                      "-DCMAKE_PREFIX_PATH=build/Release/generators")
+        c.run_command(
+            "cmake . -DCMAKE_BUILD_TYPE=Debug -B build "
+            "-DCMAKE_PREFIX_PATH=build/Release/generators"
+        )
         c.run_command("cmake --build build")
         c.run_command("./build/app")
         assert "matrix/1.0: Hello World Release!" in c.out
@@ -1339,7 +1526,6 @@ class TestConfigs:
 
 @pytest.mark.tool("cmake", "3.23")
 class TestCMakeTry:
-
     def test_check_c_source_compiles(self, matrix_client):
         """
         https://github.com/conan-io/conan/issues/12012
@@ -1374,8 +1560,9 @@ class TestCMakeTry:
                                       int main(void) { matrix();return 0; }" IT_COMPILES)
             """)
 
-        c.save({"conanfile.py": consumer,
-                "CMakeLists.txt": cmakelist}, clean_first=True)
+        c.save(
+            {"conanfile.py": consumer, "CMakeLists.txt": cmakelist}, clean_first=True
+        )
         c.run(f"install . -c tools.cmake.cmakedeps:new={new_value}")
 
         preset = "conan-default" if platform.system() == "Windows" else "conan-release"
@@ -1384,7 +1571,6 @@ class TestCMakeTry:
 
 
 class TestCMakeComponents:
-
     @pytest.mark.tool("cmake")
     @pytest.mark.parametrize("components, found", [("comp1", True), ("compX", False)])
     def test_components(self, components, found):
@@ -1419,11 +1605,17 @@ class TestCMakeComponents:
             find_package(dep CONFIG REQUIRED COMPONENTS {components})
             """)
 
-        c.save({"conanfile.py": consumer,
-                "CMakeLists.txt": cmakelist}, clean_first=True)
-        c.run(f"build . -c tools.cmake.cmakedeps:new={new_value}", assert_error=not found)
+        c.save(
+            {"conanfile.py": consumer, "CMakeLists.txt": cmakelist}, clean_first=True
+        )
+        c.run(
+            f"build . -c tools.cmake.cmakedeps:new={new_value}", assert_error=not found
+        )
         if not found:
-            assert f"Conan: Error: 'dep' required COMPONENT '{components}' not found" in c.out
+            assert (
+                f"Conan: Error: 'dep' required COMPONENT '{components}' not found"
+                in c.out
+            )
 
     def test_components_default_definition(self):
         c = TestClient()
@@ -1441,9 +1633,11 @@ class TestCMakeComponents:
             """)
         c.save({"conanfile.py": dep})
         c.run("create .")
-        c.run(f"install --requires=dep/0.1 -g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            f"install --requires=dep/0.1 -g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}"
+        )
         cmake = c.load("dep-config.cmake")
-        assert 'set(dep_PACKAGE_PROVIDED_COMPONENTS MyC1 MyC2 c3)' in cmake
+        assert "set(dep_PACKAGE_PROVIDED_COMPONENTS MyC1 MyC2 c3)" in cmake
 
     def test_components_individual_names(self):
         c = TestClient()
@@ -1460,9 +1654,11 @@ class TestCMakeComponents:
             """)
         c.save({"conanfile.py": dep})
         c.run("create .")
-        c.run(f"install --requires=dep/0.1 -g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}")
+        c.run(
+            f"install --requires=dep/0.1 -g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}"
+        )
         cmake = c.load("dep-config.cmake")
-        assert 'set(dep_PACKAGE_PROVIDED_COMPONENTS MyCompC1 MyC2 c3)' in cmake
+        assert "set(dep_PACKAGE_PROVIDED_COMPONENTS MyCompC1 MyC2 c3)" in cmake
 
 
 class TestCppInfoChecks:
@@ -1481,7 +1677,10 @@ class TestCppInfoChecks:
         c.run("create .")
         args = f"-g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}"
         c.run(f"install --requires=dep/0.1 {args}", assert_error=True)
-        assert "Error in generator 'CMakeDeps': dep/0.1 " 'cpp_info has both .exe and .libs' in c.out
+        assert (
+            "Error in generator 'CMakeDeps': dep/0.1 "
+            "cpp_info has both .exe and .libs" in c.out
+        )
 
     def test_exe_no_location(self):
         c = TestClient()
@@ -1497,7 +1696,10 @@ class TestCppInfoChecks:
         c.run("create .")
         args = f"-g CMakeDeps -c tools.cmake.cmakedeps:new={new_value}"
         c.run(f"install --requires=dep/0.1 {args}", assert_error=True)
-        assert "Error in generator 'CMakeDeps': dep/0.1 cpp_info has .exe and no .location" in c.out
+        assert (
+            "Error in generator 'CMakeDeps': dep/0.1 cpp_info has .exe and no .location"
+            in c.out
+        )
 
     def test_check_exe_wrong_type(self):
         c = TestClient()
