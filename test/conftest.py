@@ -80,12 +80,12 @@ tools_locations = {
         "3.23": {
             "path": {'Windows': 'C:/tools/cmake/3.23.5/cmake-3.23.5-windows-x86_64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.23.5/bin',
-                     'Linux': "/usr/share/cmake-3.23.5/bin"}
+                     'Linux': "/usr/bin/cmake"}
         },
         "3.27": {
             "path": {'Windows': 'C:/tools/cmake/3.27.9/cmake-3.27.9-windows-x86_64/bin',
                      'Darwin': '/Users/runner/Applications/CMake/3.27.9/bin',
-                     'Linux': "/usr/share/cmake-3.27.9/bin"}
+                     'Linux': "/usr/bin/cmake"}
         },
         "4.0": {
             "path": {'Windows': 'C:/tools/cmake/4.0.0-rc3/cmake-4.0.0-rc3-windows-x86_64/bin',
@@ -347,12 +347,14 @@ def pytest_runtest_setup(item):
         result = _get_tool(tool_name, tool_version)
         if result is True:
             version_msg = "Any" if tool_version is None else tool_version
-            pytest.fail("Required '{}' tool version '{}' is not available".format(tool_name,
-                                                                                  version_msg))
+            tool_path = tools_locations.get(tool_name, {}).get(tool_version or "default", {}).get("path", {}).get(platform.system(), "Not specified")
+            pytest.fail("Required '{}' tool version '{}' is not available (expected path: {})".format(tool_name,
+                                                                                  version_msg, tool_path))
         if result is False:
             version_msg = "Any" if tool_version is None else tool_version
-            pytest.skip("Required '{}' tool version '{}' is not available".format(tool_name,
-                                                                                  version_msg))
+            tool_path = tools_locations.get(tool_name, {}).get(tool_version or "default", {}).get("path", {}).get(platform.system(), "Not specified")
+            pytest.skip("Required '{}' tool version '{}' is not available (expected path: {})".format(tool_name,
+                                                                                  version_msg, tool_path))
 
         tool_path, tool_env = result
         if tool_path:
